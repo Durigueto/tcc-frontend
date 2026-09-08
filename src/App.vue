@@ -1,472 +1,983 @@
 <template>
   <v-app class="app-background">
-    <!-- Barra Superior Limpa com Logo Original -->
-    <header class="app-header px-4 px-md-8 py-2 border-b">
-      <div class="d-flex align-center justify-space-between flex-wrap gap-3 max-content-width">
-        <!-- Logo Oficial Recortado da Arte Original -->
-        <div class="d-flex align-center">
-          <div class="logo-container">
-            <svg viewBox="135 155 625 195" class="logo-svg-crop" preserveAspectRatio="xMidYMid meet">
-              <image href="/logo-visao90.png" width="897" height="600" />
-            </svg>
-          </div>
-        </div>
-
-        <!-- Acoes Principais (Direita) -->
-        <div class="d-flex align-center gap-2">
-          <v-btn
-            size="small"
-            color="primary"
-            variant="flat"
-            prepend-icon="mdi-account-group"
-            @click="carregarMockDemonstracao"
-            class="text-caption font-weight-bold"
-          >
-            Carregar Dados da Partida (11 Atletas)
-          </v-btn>
-
-          <v-btn
-            size="small"
-            color="surface-variant"
-            variant="flat"
-            prepend-icon="mdi-file-upload-outline"
-            @click="modalImportarAberto = true"
-            class="text-caption font-weight-bold"
-          >
-            Importar Arquivo CSV
-          </v-btn>
-        </div>
+    <!-- Top App Bar -->
+    <!-- Top App Bar Oficial Visão 90 -->
+    <v-app-bar color="#050811" elevation="2" border="b" height="68">
+      <div class="d-flex align-center pl-4">
+        <img
+          src="/visao90-header.png"
+          alt="Visão 90"
+          style="height: 44px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 10px rgba(0, 230, 153, 0.3));"
+        />
       </div>
-    </header>
+
+      <v-spacer></v-spacer>
+
+      <v-chip size="small" color="success" variant="flat" class="mr-2 font-weight-medium">
+        <v-icon start icon="mdi-checkbox-marked-circle-outline" size="14"></v-icon>
+        Motor Cinemático Ativo
+      </v-chip>
+
+      <v-chip size="small" color="teal-accent-3" variant="tonal" class="d-none d-sm-inline-flex font-weight-medium">
+        <v-icon start icon="mdi-database-check" size="14"></v-icon>
+        PostgreSQL Integrado
+      </v-chip>
+    </v-app-bar>
 
     <v-main class="py-6 px-4 px-md-8">
+      <!-- Container Principal -->
       <v-container fluid class="pa-0 max-content-width">
 
-        <!-- Mensagens de Alerta -->
+        <!-- Banner de Ingestão de Dados -->
+        <v-card class="glass-card mb-6" elevation="0">
+          <v-card-item>
+            <div class="d-flex flex-wrap align-center justify-space-between mb-3">
+              <div>
+                <h2 class="text-h5 font-weight-bold d-flex align-center">
+                  <v-icon icon="mdi-cloud-upload-outline" color="secondary" class="mr-2"></v-icon>
+                  Entrada de Coordenadas da Partida
+                </h2>
+                <p class="text-body-2 text-medium-emphasis mt-1">
+                  Importe o arquivo CSV de rastreamento ótico (tracking 25 Hz) ou selecione um conjunto de dados para processamento cinemático e fisiológico.
+                </p>
+              </div>
+
+              <!-- Abas de Entrada -->
+              <v-tabs v-model="tabInput" density="compact" color="primary" class="mt-2 mt-sm-0">
+                <v-tab value="file">
+                  <v-icon start icon="mdi-file-upload-outline"></v-icon> Upload de CSV
+                </v-tab>
+                <v-tab value="url">
+                  <v-icon start icon="mdi-link-variant"></v-icon> Repositório Remoto
+                </v-tab>
+              </v-tabs>
+            </div>
+
+            <v-window v-model="tabInput" class="mt-4">
+              <!-- Aba 1: Upload de Arquivo -->
+              <v-window-item value="file">
+                <v-row align="center">
+                  <v-col cols="12" md="8">
+                    <v-file-input
+                      v-model="arquivoSelecionado"
+                      label="Selecione o arquivo CSV com coordenadas dos atletas (25 Hz)"
+                      accept=".csv,text/csv"
+                      prepend-icon="mdi-file-delimited-outline"
+                      variant="outlined"
+                      density="comfortable"
+                      color="primary"
+                      clearable
+                      show-size
+                      hide-details
+                      placeholder="Ex: dados_rastreamento.csv"
+                    ></v-file-input>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-btn
+                      color="primary"
+                      size="large"
+                      block
+                      :loading="carregando"
+                      :disabled="!arquivoSelecionado"
+                      prepend-icon="mdi-play-speed"
+                      @click="processarPorUpload"
+                      class="font-weight-bold"
+                    >
+                      Processar Cinemática
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </v-window-item>
+
+              <!-- Aba 2: URL Remota -->
+              <v-window-item value="url">
+                <v-row align="center">
+                  <v-col cols="12" md="8">
+                    <v-text-field
+                      v-model="urlArquivo"
+                      label="URL do Arquivo CSV de Rastreamento Ótico"
+                      variant="outlined"
+                      density="comfortable"
+                      color="secondary"
+                      hide-details
+                      placeholder="https://.../dados_rastreamento.csv"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-btn
+                      color="secondary"
+                      size="large"
+                      block
+                      :loading="carregando"
+                      :disabled="!urlArquivo"
+                      prepend-icon="mdi-download-network-outline"
+                      @click="processarPorUrl"
+                      class="font-weight-bold"
+                    >
+                      Baixar & Analisar
+                    </v-btn>
+                  </v-col>
+                </v-row>
+
+                <!-- Atalhos / Presets -->
+                <div class="mt-3 d-flex flex-wrap align-center gap-2">
+                  <span class="text-caption text-medium-emphasis mr-1">Conjuntos de teste:</span>
+                  <v-chip
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                    @click="aplicarPreset('home')"
+                    prepend-icon="mdi-shield-home-outline"
+                  >
+                    Partida 1 - Equipe Mandante
+                  </v-chip>
+                  <v-chip
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                    @click="aplicarPreset('away')"
+                    prepend-icon="mdi-shield-airplane-outline"
+                  >
+                    Partida 1 - Equipe Visitante
+                  </v-chip>
+                  <v-chip
+                    size="small"
+                    variant="flat"
+                    color="primary"
+                    @click="carregarMockDemonstracao"
+                    prepend-icon="mdi-lightning-bolt"
+                    class="font-weight-bold"
+                  >
+                    Carregar Demonstração do Elenco (11 Atletas)
+                  </v-chip>
+                </div>
+              </v-window-item>
+            </v-window>
+          </v-card-item>
+        </v-card>
+
+        <!-- Alerta de Erro -->
         <v-alert
           v-if="mensagemErro"
           type="error"
           variant="tonal"
-          density="comfortable"
           closable
-          class="mb-4"
+          class="mb-6"
           @click:close="mensagemErro = ''"
         >
           {{ mensagemErro }}
         </v-alert>
 
+        <!-- Alerta de Sucesso -->
         <v-alert
           v-if="mensagemSucesso"
           type="success"
           variant="tonal"
-          density="comfortable"
           closable
-          class="mb-4"
+          class="mb-6"
           @click:close="mensagemSucesso = ''"
         >
           {{ mensagemSucesso }}
         </v-alert>
 
-        <!-- SE O ELENCO ESTIVER CARREGADO -->
+        <!-- Secao de Metricas (Exibida quando houver dados) -->
         <div v-if="atletas.length > 0">
-
-          <!-- ======================================================== -->
-          <!-- 1. RESUMO COLETIVO DA EQUIPE (CARGA EXTERNA DO ELENCO)    -->
-          <!-- ======================================================== -->
-          <div class="section-header mb-3">
-            <h2 class="text-subtitle-1 font-weight-bold text-white d-flex align-center">
-              <v-icon icon="mdi-chart-line" color="primary" class="mr-2" size="20"></v-icon>
-              1. Carga Externa Coletiva &bull; Resumo Geral da Partida
-            </h2>
-            <p class="text-caption text-muted">
-              Indicadores de volume, intensidade e esforço físico acumulados pelo elenco no campo regulamentar (105m &times; 68m).
-            </p>
-          </div>
-
-          <v-row dense class="mb-6">
-            <!-- Atletas -->
-            <v-col cols="6" sm="4" lg="2">
-              <div class="metric-card">
-                <span class="metric-title">Efetivo em Campo</span>
-                <span class="metric-number text-white font-mono">{{ atletas.length }} <small>jogadores</small></span>
-                <span class="metric-desc">Monitoramento integral</span>
-              </div>
+          <!-- KPIs Gerais do Elenco (Coletivo) -->
+          <v-row class="mb-6">
+            <!-- 1. Atletas Rastreados -->
+            <v-col cols="12" sm="6" md="4" lg="2">
+              <v-card class="glass-card kpi-card" elevation="0">
+                <v-card-item>
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                    Atletas Avaliados
+                  </div>
+                  <div class="text-h4 font-weight-black mt-1 text-primary">
+                    {{ atletas.length }}
+                  </div>
+                  <div class="text-caption text-medium-emphasis mt-1">
+                    Campo Oficial 105m × 68m
+                  </div>
+                </v-card-item>
+              </v-card>
             </v-col>
 
-            <!-- Distancia Total -->
-            <v-col cols="6" sm="4" lg="2">
-              <div class="metric-card">
-                <span class="metric-title">Volume Total</span>
-                <span class="metric-number text-primary font-mono">{{ distanciaColetivaKm.toFixed(1) }} <small>km</small></span>
-                <span class="metric-desc font-mono">Média: {{ (distanciaColetivaKm / atletas.length).toFixed(1) }} km/atleta</span>
-              </div>
+            <!-- 2. Distancia Coletiva -->
+            <v-col cols="12" sm="6" md="4" lg="2">
+              <v-card class="glass-card kpi-card" elevation="0">
+                <v-card-item>
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                    Volume Total Percorrido
+                  </div>
+                  <div class="text-h4 font-weight-black mt-1 text-secondary">
+                    {{ distanciaColetivaKm.toFixed(1) }} <span class="text-caption">km</span>
+                  </div>
+                  <div class="text-caption text-medium-emphasis mt-1">
+                    Média: {{ (distanciaColetivaKm / atletas.length).toFixed(1) }} km/atleta
+                  </div>
+                </v-card-item>
+              </v-card>
             </v-col>
 
-            <!-- Ritmo de Jogo -->
-            <v-col cols="6" sm="4" lg="2">
-              <div class="metric-card">
-                <span class="metric-title">Ritmo de Jogo</span>
-                <span class="metric-number text-white font-mono">{{ mediaMetrosPorMinuto.toFixed(0) }} <small>M/min</small></span>
-                <span class="metric-desc">Metros corridos por minuto</span>
-              </div>
+            <!-- 3. Intensidade Media (M/min) -->
+            <v-col cols="12" sm="6" md="4" lg="2">
+              <v-card class="glass-card kpi-card" elevation="0">
+                <v-card-item>
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                    Ritmo Médio (Densidade)
+                  </div>
+                  <div class="text-h4 font-weight-black mt-1 text-info">
+                    {{ mediaMetrosPorMinuto.toFixed(0) }} <span class="text-caption">m/min</span>
+                  </div>
+                  <div class="text-caption text-medium-emphasis mt-1">
+                    Ref. Futebol Pro: 100-125 m/min
+                  </div>
+                </v-card-item>
+              </v-card>
             </v-col>
 
-            <!-- Pico de Velocidade -->
-            <v-col cols="6" sm="4" lg="2">
-              <div class="metric-card">
-                <span class="metric-title">Pico de Velocidade</span>
-                <span class="metric-number text-warning font-mono">{{ maiorVelocidade.toFixed(1) }} <small>km/h</small></span>
-                <span class="metric-desc">Atleta #{{ atletaMaisRapido?.id }}</span>
-              </div>
+            <!-- 4. Velocidade de Pico -->
+            <v-col cols="12" sm="6" md="4" lg="2">
+              <v-card class="glass-card kpi-card" elevation="0">
+                <v-card-item>
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                    Pico de Velocidade
+                  </div>
+                  <div class="text-h4 font-weight-black mt-1 text-warning">
+                    {{ maiorVelocidade.toFixed(1) }} <span class="text-caption">km/h</span>
+                  </div>
+                  <div class="text-caption text-medium-emphasis mt-1">
+                    Atleta mais veloz: #{{ atletaMaisRapido?.id || '-' }}
+                  </div>
+                </v-card-item>
+              </v-card>
             </v-col>
 
-            <!-- Arrancadas / Aceleracoes -->
-            <v-col cols="6" sm="4" lg="2">
-              <div class="metric-card">
-                <span class="metric-title">Arrancadas Rápidas</span>
-                <span class="metric-number text-success font-mono">{{ totalAceleracoesAltas }} <small>ações</small></span>
-                <span class="metric-desc">Acelerações > 2,5 m/s²</span>
-              </div>
+            <!-- 5. Aceleracoes Explosivas Coletivas -->
+            <v-col cols="12" sm="6" md="4" lg="2">
+              <v-card class="glass-card kpi-card" elevation="0">
+                <v-card-item>
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                    Arrancadas Bruscas
+                  </div>
+                  <div class="text-h4 font-weight-black mt-1 text-success">
+                    {{ totalAceleracoesAltas }}
+                  </div>
+                  <div class="text-caption text-medium-emphasis mt-1">
+                    Acelerações > 2.5 m/s² (Coletivo)
+                  </div>
+                </v-card-item>
+              </v-card>
             </v-col>
 
-            <!-- Carga em Alta Potencia -->
-            <v-col cols="6" sm="4" lg="2">
-              <div class="metric-card">
-                <span class="metric-title">Alta Potência</span>
-                <span class="metric-number text-info font-mono">{{ (totalHpmdM / 1000).toFixed(1) }} <small>km</small></span>
-                <span class="metric-desc">Esforços > 20 W/kg (HPMD)</span>
-              </div>
+            <!-- 6. Alta Potencia Metabolica (HPMD) -->
+            <v-col cols="12" sm="6" md="4" lg="2">
+              <v-card class="glass-card kpi-card" elevation="0">
+                <v-card-item>
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                    Alta Potência Metabólica
+                  </div>
+                  <div class="text-h4 font-weight-black mt-1 text-error">
+                    {{ (totalHpmdM / 1000).toFixed(1) }} <span class="text-caption">km</span>
+                  </div>
+                  <div class="text-caption text-medium-emphasis mt-1">
+                    HPMD > 20 W/kg (Demanda Intensa)
+                  </div>
+                </v-card-item>
+              </v-card>
             </v-col>
           </v-row>
 
-          <!-- ======================================================== -->
-          <!-- 2. TABELA COMPLETA DOS ATLETAS (SEM OCULTAR NADA)         -->
-          <!-- ======================================================== -->
-          <div class="panel-box mb-6">
-            <div class="pa-4 border-b d-flex align-center justify-space-between flex-wrap gap-3">
-              <div>
-                <h3 class="text-subtitle-1 font-weight-bold text-white d-flex align-center">
-                  <v-icon icon="mdi-table-large" color="primary" class="mr-2" size="20"></v-icon>
-                  2. Relatório Individual dos Atletas &bull; Métricas Físicas e Cinemáticas
-                </h3>
-                <p class="text-caption text-muted">
-                  Tabela completa com todos os parâmetros calculados pelo algoritmo de rastreamento. Clique em "Ver Análise Detalhada" para inspecionar o atleta.
-                </p>
+          <!-- Legenda das Zonas de Intensidade -->
+          <v-card class="glass-card mb-6" elevation="0">
+            <v-card-item>
+              <div class="text-subtitle-2 font-weight-bold mb-3 d-flex align-center">
+                <v-icon icon="mdi-chart-bar-stacked" class="mr-2" color="primary"></v-icon>
+                Classificação Fisiológica por Zonas de Deslocamento (Convenção Internacional de Fisiologia)
               </div>
+              <v-row dense>
+                <v-col cols="6" sm="3">
+                  <div class="d-flex align-center">
+                    <span class="zone-badge zone-walk mr-2"></span>
+                    <div>
+                      <div class="text-caption font-weight-bold">Z1 - Caminhada (Recuperação)</div>
+                      <div class="text-caption text-medium-emphasis">0,0 a 7,2 km/h</div>
+                    </div>
+                  </div>
+                </v-col>
+                <v-col cols="6" sm="3">
+                  <div class="d-flex align-center">
+                    <span class="zone-badge zone-jog mr-2"></span>
+                    <div>
+                      <div class="text-caption font-weight-bold">Z2 - Trote (Aeróbio Leve)</div>
+                      <div class="text-caption text-medium-emphasis">7,2 a 14,4 km/h</div>
+                    </div>
+                  </div>
+                </v-col>
+                <v-col cols="6" sm="3">
+                  <div class="d-flex align-center">
+                    <span class="zone-badge zone-run mr-2"></span>
+                    <div>
+                      <div class="text-caption font-weight-bold">Z3 - Corrida Submáxima (Média)</div>
+                      <div class="text-caption text-medium-emphasis">14,4 a 19,8 km/h</div>
+                    </div>
+                  </div>
+                </v-col>
+                <v-col cols="6" sm="3">
+                  <div class="d-flex align-center">
+                    <span class="zone-badge zone-sprint mr-2"></span>
+                    <div>
+                      <div class="text-caption font-weight-bold">Z4 - Alta Intensidade e Sprints</div>
+                      <div class="text-caption text-medium-emphasis">> 19,8 km/h</div>
+                    </div>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-card-item>
+          </v-card>
 
+          <!-- Tabela Completa de Atletas -->
+          <v-card class="glass-card mb-6" elevation="0">
+            <v-card-title class="pa-4 d-flex flex-wrap align-center justify-space-between">
+              <div class="d-flex align-center">
+                <v-icon icon="mdi-account-details" color="primary" class="mr-2"></v-icon>
+                <span>Quadro de Desempenho Físico e Carga Externa Individual</span>
+              </div>
               <v-text-field
                 v-model="filtroBusca"
-                placeholder="Filtrar por camisa ou posição..."
+                placeholder="Buscar por ID ou Posição Tática..."
                 prepend-inner-icon="mdi-magnify"
                 variant="outlined"
                 density="compact"
                 hide-details
-                style="max-width: 280px;"
+                style="max-width: 280px"
               ></v-text-field>
+            </v-card-title>
+
+            <v-divider></v-divider>
+
+            <v-table hover class="bg-transparent table-custom">
+              <thead>
+                <tr>
+                  <th class="text-left font-weight-bold">Atleta & Função Tática</th>
+                  <th class="text-left font-weight-bold">Distância Percorrida</th>
+                  <th class="text-left font-weight-bold">Ritmo de Jogo (m/min)</th>
+                  <th class="text-left font-weight-bold">Vel. Máx / Média</th>
+                  <th class="text-left font-weight-bold">Acelerações / Frenagens</th>
+                  <th class="text-left font-weight-bold">Sprints Realizados</th>
+                  <th class="text-left font-weight-bold">Carga Mecânica (Player Load)</th>
+                  <th class="text-center font-weight-bold">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="atleta in atletasFiltrados" :key="atleta.id">
+                  <!-- ID & Posicao -->
+                  <td>
+                    <div class="d-flex align-center py-2">
+                      <v-avatar color="surface-variant" size="38" class="mr-3 font-weight-black">
+                        #{{ atleta.id }}
+                      </v-avatar>
+                      <div>
+                        <div class="font-weight-bold">Jogador {{ atleta.id }}</div>
+                        <div class="text-caption text-primary">
+                          {{ atleta.posicaoSugerida || 'Em Campo' }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Distancia Total -->
+                  <td>
+                    <div class="font-weight-bold text-body-1">
+                      {{ (atleta.distanciaTotal).toFixed(0) }} m
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ (atleta.distanciaTotal / 1000).toFixed(2) }} km
+                    </div>
+                  </td>
+
+                  <!-- M/min -->
+                  <td>
+                    <v-chip
+                      size="small"
+                      :color="atleta.metrosPorMinuto >= 120 ? 'error' : atleta.metrosPorMinuto >= 105 ? 'warning' : 'info'"
+                      variant="tonal"
+                      class="font-weight-bold"
+                    >
+                      {{ atleta.metrosPorMinuto ? atleta.metrosPorMinuto.toFixed(1) : '-' }} m/min
+                    </v-chip>
+                  </td>
+
+                  <!-- Velocidade Max e Media -->
+                  <td>
+                    <div class="font-weight-bold">
+                      {{ atleta.velocidadeMaxima.toFixed(1) }} km/h
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      Média: {{ atleta.velocidadeMedia ? atleta.velocidadeMedia.toFixed(1) : '-' }} km/h
+                    </div>
+                  </td>
+
+                  <!-- Aceleracoes vs Desaceleracoes -->
+                  <td>
+                    <div class="d-flex align-center gap-1">
+                      <span class="text-success font-weight-bold" title="Acelerações > 2.5 m/s²">
+                        +{{ atleta.aceleracoesAltas || 0 }}
+                      </span>
+                      <span class="text-medium-emphasis">/</span>
+                      <span class="text-error font-weight-bold" title="Frenagens < -2.5 m/s² (Carga Excêntrica)">
+                        -{{ atleta.desaceleracoesAltas || 0 }}
+                      </span>
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      Pico: +{{ atleta.aceleracaoMaxima?.toFixed(1) || 0 }} m/s²
+                    </div>
+                  </td>
+
+                  <!-- Sprints -->
+                  <td>
+                    <div class="font-weight-bold text-error">
+                      {{ atleta.sprintsContagem || 0 }} tiros
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ atleta.distanciaSprint?.toFixed(0) || 0 }} m em sprint
+                    </div>
+                  </td>
+
+                  <!-- Player Load -->
+                  <td>
+                    <div class="font-weight-bold text-warning">
+                      {{ atleta.playerLoad?.toFixed(0) || '-' }} U.A.
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ atleta.potenciaMetabolicaMedia?.toFixed(1) || '-' }} W/kg
+                    </div>
+                  </td>
+
+                  <!-- Botao Ver Detalhes -->
+                  <td class="text-center">
+                    <v-btn
+                      size="small"
+                      color="primary"
+                      variant="flat"
+                      prepend-icon="mdi-account-search"
+                      @click="abrirPerfilDetalhado(atleta)"
+                      class="font-weight-bold"
+                    >
+                      Ver Perfil
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </v-card>
+        </div>
+
+        <!-- Estado Vazio (Nenhum dado carregado ainda) -->
+        <v-card v-else class="glass-card text-center pa-10" elevation="0">
+          <v-icon icon="mdi-soccer-field" size="72" color="medium-emphasis" class="mb-3"></v-icon>
+          <h3 class="text-h5 font-weight-bold">Aguardando Coordenadas de Rastreamento da Partida</h3>
+          <p class="text-body-2 text-medium-emphasis mt-2" style="max-width: 600px; margin: 0 auto;">
+            Envie o arquivo CSV de coordenadas 25 Hz ou utilize a demonstração com 11 atletas para explorar métricas cinemáticas completas, acelerações, frenagens excêntricas, prancheta tática e escala de Borg CR-10.
+          </p>
+          <v-btn
+            color="primary"
+            size="large"
+            class="mt-5 font-weight-bold"
+            prepend-icon="mdi-lightning-bolt"
+            @click="carregarMockDemonstracao"
+          >
+            Carregar Demonstração do Elenco (11 Atletas)
+          </v-btn>
+        </v-card>
+
+      </v-container>
+    </v-main>
+
+    <!-- MODAL COMPLETO: PERFIL & ANALISE APROFUNDADA DO ATLETA -->
+    <v-dialog v-model="modalDetalhesAberto" max-width="960" scrollable>
+      <v-card class="glass-card pa-2" elevation="10" border v-if="atletaSelecionado">
+        <!-- Header do Modal -->
+        <v-card-item class="pb-2">
+          <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+            <div class="d-flex align-center">
+              <v-avatar color="primary" size="48" class="mr-3 font-weight-black text-h6">
+                #{{ atletaSelecionado.id }}
+              </v-avatar>
+              <div>
+                <div class="d-flex align-center gap-2">
+                  <h3 class="text-h6 font-weight-bold">Atleta #{{ atletaSelecionado.id }}</h3>
+                  <v-chip size="small" color="secondary" variant="flat" class="font-weight-bold">
+                    {{ atletaSelecionado.posicaoSugerida }}
+                  </v-chip>
+                </div>
+                <div class="text-caption text-medium-emphasis">
+                  Análise Físico-Cinemática & Fisiologia Aplicada &middot; Posição Média: X={{ atletaSelecionado.centroideX }}m, Y={{ atletaSelecionado.centroideY }}m
+                </div>
+              </div>
             </div>
 
-            <!-- Tabela com TODOS os dados visíveis -->
-            <div class="table-responsive">
-              <v-table class="clean-table" hover>
-                <thead>
-                  <tr>
-                    <th class="text-left">Atleta</th>
-                    <th class="text-left">Posição Tática</th>
-                    <th class="text-right">Distância Total</th>
-                    <th class="text-right">Ritmo (M/min)</th>
-                    <th class="text-right">Vel. Máxima</th>
-                    <th class="text-right">Vel. Média</th>
-                    <th class="text-center" style="min-width: 140px;">Faixas de Velocidade</th>
-                    <th class="text-center">Arrancadas / Freadas</th>
-                    <th class="text-right">Sprints</th>
-                    <th class="text-right">Média/Sprint</th>
-                    <th class="text-right">Carga Mecânica</th>
-                    <th class="text-center">Ação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="a in atletasFiltrados"
-                    :key="a.id"
-                    :class="atletaSelecionado?.id === a.id ? 'active-table-row' : ''"
-                  >
-                    <!-- Camisa & Nome -->
-                    <td>
-                      <div class="d-flex align-center">
-                        <span class="jersey-badge mr-2">#{{ a.id }}</span>
-                        <span class="font-weight-bold text-white">Jogador {{ a.id }}</span>
-                      </div>
-                    </td>
-
-                    <!-- Posicao Tatica -->
-                    <td>
-                      <span class="text-slate-300 font-weight-medium text-caption">{{ a.posicaoSugerida }}</span>
-                    </td>
-
-                    <!-- Distancia Total -->
-                    <td class="text-right font-mono">
-                      <span class="font-weight-bold text-white">{{ (a.distanciaTotal).toFixed(0) }} m</span>
-                      <div class="text-xs text-muted">({{ (a.distanciaTotal / 1000).toFixed(2) }} km)</div>
-                    </td>
-
-                    <!-- Ritmo de Jogo (M/min) -->
-                    <td class="text-right font-mono">
-                      <v-chip
-                        size="x-small"
-                        :color="a.metrosPorMinuto >= 120 ? 'error' : a.metrosPorMinuto >= 105 ? 'primary' : 'surface-variant'"
-                        variant="flat"
-                        class="font-weight-bold"
-                      >
-                        {{ a.metrosPorMinuto.toFixed(1) }} M/min
-                      </v-chip>
-                    </td>
-
-                    <!-- Velocidade Maxima -->
-                    <td class="text-right font-mono text-warning font-weight-bold">
-                      {{ a.velocidadeMaxima.toFixed(1) }} km/h
-                    </td>
-
-                    <!-- Velocidade Media -->
-                    <td class="text-right font-mono text-slate-300">
-                      {{ a.velocidadeMedia.toFixed(1) }} km/h
-                    </td>
-
-                    <!-- Distribuicao das 4 Zonas -->
-                    <td class="text-center">
-                      <div class="segmented-bar mb-1" title="Z1: Caminhada | Z2: Trote | Z3: Corrida | Z4: Sprint">
-                        <div class="seg-walk" :style="{ width: percentualZona(a, 'distanciaAndando') + '%' }"></div>
-                        <div class="seg-jog" :style="{ width: percentualZona(a, 'distanciaTrotando') + '%' }"></div>
-                        <div class="seg-run" :style="{ width: percentualZona(a, 'distanciaCorrendo') + '%' }"></div>
-                        <div class="seg-sprint" :style="{ width: percentualZona(a, 'distanciaSprint') + '%' }"></div>
-                      </div>
-                      <div class="text-xs text-muted">
-                        Sprint: {{ a.distanciaSprint?.toFixed(0) }}m ({{ percentualZona(a, 'distanciaSprint').toFixed(0) }}%)
-                      </div>
-                    </td>
-
-                    <!-- Arrancadas vs Freadas -->
-                    <td class="text-center font-mono">
-                      <span class="text-success font-weight-bold" title="Acelerações > 2,5 m/s²">+{{ a.aceleracoesAltas }}</span>
-                      <span class="text-muted mx-1">/</span>
-                      <span class="text-error font-weight-bold" title="Desacelerações < -2,5 m/s²">-{{ a.desaceleracoesAltas }}</span>
-                    </td>
-
-                    <!-- Sprints Contagem -->
-                    <td class="text-right font-mono text-error font-weight-bold">
-                      {{ a.sprintsContagem || 0 }} tiros
-                    </td>
-
-                    <!-- Distancia Media por Tiro -->
-                    <td class="text-right font-mono text-slate-300">
-                      {{ a.distanciaMediaSprint?.toFixed(1) || 0 }} m
-                    </td>
-
-                    <!-- Carga Mecanica (Player Load) -->
-                    <td class="text-right font-mono font-weight-bold text-white">
-                      {{ a.playerLoad?.toFixed(0) }}
-                    </td>
-
-                    <!-- Botao de Acao -->
-                    <td class="text-center">
-                      <v-btn
-                        size="x-small"
-                        color="primary"
-                        variant="flat"
-                        @click="selecionarAtletaParaInspecao(a)"
-                        class="text-caption font-weight-bold"
-                      >
-                        Ver Análise
-                      </v-btn>
-                    </td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </div>
+            <v-btn icon="mdi-close" variant="text" size="small" @click="modalDetalhesAberto = false"></v-btn>
           </div>
 
-          <!-- ======================================================== -->
-          <!-- 3. DOSSIÊ DETALHADO DO JOGADOR (CAMPO, RADAR E BORG)     -->
-          <!-- ======================================================== -->
-          <div id="dossie-atleta" v-if="atletaSelecionado" class="panel-box pa-5 mb-6">
-            <!-- Cabecalho do Atleta -->
-            <div class="d-flex align-center justify-space-between flex-wrap gap-3 border-b pb-4 mb-4">
-              <div class="d-flex align-center">
-                <div class="player-header-badge mr-3">#{{ atletaSelecionado.id }}</div>
-                <div>
-                  <div class="d-flex align-center gap-2">
-                    <h2 class="text-h6 font-weight-black text-white">Dossiê Técnico &bull; Jogador {{ atletaSelecionado.id }}</h2>
-                    <v-chip size="small" variant="flat" color="primary" class="font-weight-bold">
-                      {{ atletaSelecionado.posicaoSugerida }}
-                    </v-chip>
-                  </div>
-                  <p class="text-caption text-muted mt-1">
-                    Análise aprofundada de ocupação espacial, equilíbrio neuromuscular e cruzamento de carga externa com percepção subjetiva (Borg).
-                  </p>
+          <!-- Abas de Navegação no Modal -->
+          <v-tabs v-model="abaModal" color="primary" density="compact" class="mt-4">
+            <v-tab value="cinematica">
+              <v-icon start icon="mdi-speedometer"></v-icon> Cinemática & Volume
+            </v-tab>
+            <v-tab value="inercial">
+              <v-icon start icon="mdi-axis-arrow"></v-icon> Cargas Inerciais & Neuromusculares
+            </v-tab>
+            <v-tab value="campo">
+              <v-icon start icon="mdi-soccer-field"></v-icon> Prancheta Tática Oficial
+            </v-tab>
+            <v-tab value="radar">
+              <v-icon start icon="mdi-radar"></v-icon> Radar vs Média do Elenco
+            </v-tab>
+            <v-tab value="fisiologia">
+              <v-icon start icon="mdi-heart-pulse"></v-icon> Fisiologia & Escala de Borg
+            </v-tab>
+          </v-tabs>
+        </v-card-item>
+
+        <v-divider></v-divider>
+
+        <v-card-text style="max-height: 650px;" class="py-4">
+          <v-window v-model="abaModal">
+            
+            <!-- ABA 1: CINEMATICA & INTENSIDADE -->
+            <v-window-item value="cinematica">
+              <v-row dense class="mb-4">
+                <v-col cols="6" sm="3">
+                  <v-card color="surface-variant" class="pa-3 text-center" elevation="0">
+                    <div class="text-caption text-medium-emphasis">Distancia Total</div>
+                    <div class="text-h5 font-weight-black text-primary">
+                      {{ (atletaSelecionado.distanciaTotal).toFixed(0) }} m
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ (atletaSelecionado.distanciaTotal / 1000).toFixed(2) }} km
+                    </div>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="6" sm="3">
+                  <v-card color="surface-variant" class="pa-3 text-center" elevation="0">
+                    <div class="text-caption text-medium-emphasis">Intensidade (M/min)</div>
+                    <div class="text-h5 font-weight-black text-info">
+                      {{ atletaSelecionado.metrosPorMinuto?.toFixed(1) }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">Metros/Minuto</div>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="6" sm="3">
+                  <v-card color="surface-variant" class="pa-3 text-center" elevation="0">
+                    <div class="text-caption text-medium-emphasis">Velocidade Maxima</div>
+                    <div class="text-h5 font-weight-black text-warning">
+                      {{ atletaSelecionado.velocidadeMaxima?.toFixed(1) }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">km/h</div>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="6" sm="3">
+                  <v-card color="surface-variant" class="pa-3 text-center" elevation="0">
+                    <div class="text-caption text-medium-emphasis">Velocidade Media</div>
+                    <div class="text-h5 font-weight-black text-success">
+                      {{ atletaSelecionado.velocidadeMedia?.toFixed(1) }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">km/h</div>
+                  </v-card>
+                </v-col>
+              </v-row>
+
+              <!-- Distribuicao por Zonas de Velocidade -->
+              <div class="text-subtitle-2 font-weight-bold text-uppercase text-medium-emphasis mb-2">
+                Distribuicao do Volume por Zonas de Velocidade
+              </div>
+
+              <div class="segmented-bar mb-3" style="height: 16px;">
+                <div
+                  class="seg-walk"
+                  :style="{ width: percentualZona(atletaSelecionado, 'distanciaAndando') + '%' }"
+                ></div>
+                <div
+                  class="seg-jog"
+                  :style="{ width: percentualZona(atletaSelecionado, 'distanciaTrotando') + '%' }"
+                ></div>
+                <div
+                  class="seg-run"
+                  :style="{ width: percentualZona(atletaSelecionado, 'distanciaCorrendo') + '%' }"
+                ></div>
+                <div
+                  class="seg-sprint"
+                  :style="{ width: percentualZona(atletaSelecionado, 'distanciaSprint') + '%' }"
+                ></div>
+              </div>
+
+              <v-row dense>
+                <v-col cols="6" sm="3">
+                  <v-card class="pa-3" variant="outlined" border>
+                    <div class="d-flex align-center mb-1">
+                      <span class="zone-badge zone-walk mr-2"></span>
+                      <span class="text-caption font-weight-bold">Z1 - Caminhada</span>
+                    </div>
+                    <div class="text-h6 font-weight-bold">
+                      {{ atletaSelecionado.distanciaAndando?.toFixed(1) }} m
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ percentualZona(atletaSelecionado, 'distanciaAndando').toFixed(1) }}% do total
+                    </div>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="6" sm="3">
+                  <v-card class="pa-3" variant="outlined" border>
+                    <div class="d-flex align-center mb-1">
+                      <span class="zone-badge zone-jog mr-2"></span>
+                      <span class="text-caption font-weight-bold">Z2 - Trote</span>
+                    </div>
+                    <div class="text-h6 font-weight-bold">
+                      {{ atletaSelecionado.distanciaTrotando?.toFixed(1) }} m
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ percentualZona(atletaSelecionado, 'distanciaTrotando').toFixed(1) }}% do total
+                    </div>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="6" sm="3">
+                  <v-card class="pa-3" variant="outlined" border>
+                    <div class="d-flex align-center mb-1">
+                      <span class="zone-badge zone-run mr-2"></span>
+                      <span class="text-caption font-weight-bold">Z3 - Corrida</span>
+                    </div>
+                    <div class="text-h6 font-weight-bold">
+                      {{ atletaSelecionado.distanciaCorrendo?.toFixed(1) }} m
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ percentualZona(atletaSelecionado, 'distanciaCorrendo').toFixed(1) }}% do total
+                    </div>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="6" sm="3">
+                  <v-card class="pa-3" variant="outlined" border>
+                    <div class="d-flex align-center mb-1">
+                      <span class="zone-badge zone-sprint mr-2"></span>
+                      <span class="text-caption font-weight-bold">Z4 - Sprint</span>
+                    </div>
+                    <div class="text-h6 font-weight-bold text-error">
+                      {{ atletaSelecionado.distanciaSprint?.toFixed(1) }} m
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      {{ percentualZona(atletaSelecionado, 'distanciaSprint').toFixed(1) }}% do total
+                    </div>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-window-item>
+
+            <!-- ABA 2: DINAMICA INERCIAL & CARGAS MECANICAS -->
+            <v-window-item value="inercial">
+              <div class="text-subtitle-2 font-weight-bold text-uppercase text-medium-emphasis mb-2">
+                Acelerações, Desacelerações e Esforço Neuromuscular
+              </div>
+
+              <v-row dense class="mb-4">
+                <!-- Aceleracoes -->
+                <v-col cols="12" sm="6">
+                  <v-card color="surface-variant" class="pa-3" elevation="0">
+                    <div class="d-flex align-center justify-space-between mb-2">
+                      <span class="font-weight-bold text-success d-flex align-center">
+                        <v-icon icon="mdi-arrow-up-bold" class="mr-1"></v-icon>
+                        Acelerações Intensas
+                      </span>
+                      <v-chip size="small" color="success" variant="flat">
+                        Pico: +{{ atletaSelecionado.aceleracaoMaxima?.toFixed(2) }} m/s²
+                      </v-chip>
+                    </div>
+                    <div class="d-flex justify-space-around text-center mt-2">
+                      <div>
+                        <div class="text-caption text-medium-emphasis">Ações > 2.5 m/s²</div>
+                        <div class="text-h5 font-weight-black text-success">
+                          {{ atletaSelecionado.aceleracoesAltas || 0 }}
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-caption text-medium-emphasis">Explosivas > 3.0 m/s²</div>
+                        <div class="text-h5 font-weight-black text-success">
+                          {{ atletaSelecionado.aceleracoesExplosivas || 0 }}
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-caption text-medium-emphasis">Distancia</div>
+                        <div class="text-h6 font-weight-bold">
+                          {{ atletaSelecionado.distanciaAcelerando?.toFixed(0) || 0 }} m
+                        </div>
+                      </div>
+                    </div>
+                  </v-card>
+                </v-col>
+
+                <!-- Desaceleracoes -->
+                <v-col cols="12" sm="6">
+                  <v-card color="surface-variant" class="pa-3" elevation="0">
+                    <div class="d-flex align-center justify-space-between mb-2">
+                      <span class="font-weight-bold text-error d-flex align-center">
+                        <v-icon icon="mdi-arrow-down-bold" class="mr-1"></v-icon>
+                        Desacelerações Bruscas (Carga Excêntrica)
+                      </span>
+                      <v-chip size="small" color="error" variant="flat">
+                        Pico: {{ atletaSelecionado.desaceleracaoMaxima?.toFixed(2) }} m/s²
+                      </v-chip>
+                    </div>
+                    <div class="d-flex justify-space-around text-center mt-2">
+                      <div>
+                        <div class="text-caption text-medium-emphasis">Ações < -2.5 m/s²</div>
+                        <div class="text-h5 font-weight-black text-error">
+                          {{ atletaSelecionado.desaceleracoesAltas || 0 }}
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-caption text-medium-emphasis">Críticas < -3.0 m/s²</div>
+                        <div class="text-h5 font-weight-black text-error">
+                          {{ atletaSelecionado.desaceleracoesCriticas || 0 }}
+                        </div>
+                      </div>
+                      <div>
+                        <div class="text-caption text-medium-emphasis">Distancia</div>
+                        <div class="text-h6 font-weight-bold">
+                          {{ atletaSelecionado.distanciaDesacelerando?.toFixed(0) || 0 }} m
+                        </div>
+                      </div>
+                    </div>
+                  </v-card>
+                </v-col>
+              </v-row>
+
+              <!-- Sprints e Potencia Metabolica -->
+              <div class="text-subtitle-2 font-weight-bold text-uppercase text-medium-emphasis mb-2">
+                Potência Metabólica (Di Prampero & Osgnach) & Tiros de Sprint
+              </div>
+
+              <v-row dense>
+                <v-col cols="6" sm="3">
+                  <v-card class="pa-3 text-center" variant="outlined" border>
+                    <div class="text-caption text-medium-emphasis">Contagem de Sprints</div>
+                    <div class="text-h5 font-weight-black text-error">
+                      {{ atletaSelecionado.sprintsContagem || 0 }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">Tiros > 19.8 km/h</div>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="6" sm="3">
+                  <v-card class="pa-3 text-center" variant="outlined" border>
+                    <div class="text-caption text-medium-emphasis">Media por Sprint</div>
+                    <div class="text-h5 font-weight-black text-error">
+                      {{ atletaSelecionado.distanciaMediaSprint?.toFixed(1) || 0 }} m
+                    </div>
+                    <div class="text-caption text-medium-emphasis">Metros/tiro</div>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="6" sm="3">
+                  <v-card class="pa-3 text-center" variant="outlined" border>
+                    <div class="text-caption text-medium-emphasis">Potência Metabólica</div>
+                    <div class="text-h5 font-weight-black text-warning">
+                      {{ atletaSelecionado.potenciaMetabolicaMedia?.toFixed(1) || 0 }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">W/kg (Média)</div>
+                  </v-card>
+                </v-col>
+
+                <v-col cols="6" sm="3">
+                  <v-card class="pa-3 text-center" variant="outlined" border>
+                    <div class="text-caption text-medium-emphasis">HPMD (> 20 W/kg)</div>
+                    <div class="text-h5 font-weight-black text-secondary">
+                      {{ atletaSelecionado.distanciaAltaPotenciaMetabolica?.toFixed(0) || 0 }} m
+                    </div>
+                    <div class="text-caption text-medium-emphasis">Alta Potência Metabólica</div>
+                  </v-card>
+                </v-col>
+              </v-row>
+
+              <!-- Nota Científica de Prevenção de Lesões -->
+              <v-alert
+                type="info"
+                variant="tonal"
+                density="compact"
+                class="mt-4"
+                icon="mdi-shield-check-outline"
+              >
+                <div class="text-caption">
+                  <strong>Relevância Fisiológica & Prevenção de Lesões:</strong> As frenagens bruscas (desacelerações &lt; -2.5 m/s²) impõem elevado estresse mecânico à contração excêntrica (isquiotibiais e quadríceps), gerando microrrupturas de miofibrilas superiores às das arrancadas. São o indicador primário de fadiga neuromuscular periférica.
+                </div>
+              </v-alert>
+            </v-window-item>
+
+            <!-- ABA 3: CAMPO TATICO E MAPA ESPACIAL -->
+            <v-window-item value="campo">
+              <div class="d-flex align-center justify-space-between mb-2">
+                <div class="text-subtitle-2 font-weight-bold text-uppercase text-medium-emphasis">
+                  Dispersao Espacial & Centroide Tatico (Campo Oficial 105m x 68m)
+                </div>
+                <div class="text-caption text-medium-emphasis">
+                  Centroide: ({{ atletaSelecionado.centroideX }}m, {{ atletaSelecionado.centroideY }}m) &middot; Raio de Acao: &plusmn;{{ atletaSelecionado.raioAcao }}m
                 </div>
               </div>
 
-              <!-- Seletor de Atleta Ativo -->
-              <div class="d-flex align-center gap-2">
-                <span class="text-caption text-muted">Selecionar Atleta:</span>
-                <v-select
-                  v-model="atletaSelecionadoId"
-                  :items="atletas"
-                  item-title="id"
-                  item-value="id"
-                  density="compact"
-                  variant="outlined"
-                  hide-details
-                  style="width: 140px;"
-                  @update:model-value="onTrocarAtleta"
+              <!-- Mini Pitch SVG -->
+              <div class="pitch-container pa-3">
+                <svg
+                  viewBox="0 0 1050 680"
+                  class="soccer-pitch"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <template v-slot:item="{ props, item }">
-                    <v-list-item v-bind="props" :title="'#' + item.raw.id + ' - ' + item.raw.posicaoSugerida"></v-list-item>
-                  </template>
-                </v-select>
+                  <!-- Fundo de Grama com Faixas Verticais -->
+                  <defs>
+                    <pattern id="grass-stripes" width="105" height="680" patternUnits="userSpaceOnUse">
+                      <rect x="0" width="52.5" height="680" fill="#133826" />
+                      <rect x="52.5" width="52.5" height="680" fill="#0f2f1f" />
+                    </pattern>
+                  </defs>
+                  <rect width="1050" height="680" fill="url(#grass-stripes)" rx="16" />
+
+                  <!-- Linhas Regulamentares Brancas -->
+                  <!-- Borda do Campo -->
+                  <rect x="40" y="40" width="970" height="600" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="4" />
+                  
+                  <!-- Linha Central -->
+                  <line x1="525" y1="40" x2="525" y2="640" stroke="rgba(255,255,255,0.7)" stroke-width="4" />
+                  
+                  <!-- Circulo Central -->
+                  <circle cx="525" cy="340" r="91.5" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="4" />
+                  <circle cx="525" cy="340" r="6" fill="rgba(255,255,255,0.9)" />
+
+                  <!-- Grande Area Esquerda -->
+                  <rect x="40" y="160" width="165" height="360" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="4" />
+                  <!-- Pequena Area Esquerda -->
+                  <rect x="40" y="245" width="55" height="190" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="4" />
+                  <!-- Ponto Penal Esquerdo -->
+                  <circle cx="150" cy="340" r="5" fill="rgba(255,255,255,0.9)" />
+                  <!-- Gol Esquerdo -->
+                  <rect x="15" y="295" width="25" height="90" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
+
+                  <!-- Grande Area Direita -->
+                  <rect x="845" y="160" width="165" height="360" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="4" />
+                  <!-- Pequena Area Direita -->
+                  <rect x="955" y="245" width="55" height="190" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="4" />
+                  <!-- Ponto Penal Direito -->
+                  <circle cx="900" cy="340" r="5" fill="rgba(255,255,255,0.9)" />
+                  <!-- Gol Direito -->
+                  <rect x="1010" y="295" width="25" height="90" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
+
+                  <!-- Amostras de Trilha Espacial (Pontos de GPS) -->
+                  <g opacity="0.6">
+                    <circle
+                      v-for="(pt, idx) in atletaSelecionado.amostrasPosicao"
+                      :key="'pt-' + idx"
+                      :cx="pt.x * 10"
+                      :cy="pt.y * 10"
+                      r="7"
+                      fill="#10b981"
+                      opacity="0.35"
+                    />
+                  </g>
+
+                  <!-- Raio de Acao do Atleta (Area de Cobertura) -->
+                  <circle
+                    :cx="atletaSelecionado.centroideX * 10"
+                    :cy="atletaSelecionado.centroideY * 10"
+                    :r="Math.max(40, (atletaSelecionado.raioAcao || 15) * 10)"
+                    fill="rgba(16, 185, 129, 0.18)"
+                    stroke="#10b981"
+                    stroke-width="2"
+                    stroke-dasharray="6,4"
+                  />
+
+                  <!-- Centroide Tatico (Posicao Media do Atleta) -->
+                  <g :transform="'translate(' + (atletaSelecionado.centroideX * 10) + ',' + (atletaSelecionado.centroideY * 10) + ')'">
+                    <circle r="22" fill="#ef4444" stroke="#ffffff" stroke-width="3" />
+                    <text
+                      x="0"
+                      y="7"
+                      text-anchor="middle"
+                      fill="#ffffff"
+                      font-size="16"
+                      font-weight="bold"
+                      font-family="sans-serif"
+                    >
+                      {{ atletaSelecionado.id }}
+                    </text>
+                  </g>
+                </svg>
               </div>
-            </div>
 
-            <!-- Grade em 3 Colunas Técnicas -->
-            <v-row dense>
-              <!-- COLUNA 1: CAMPO TATICO E MAPA ESPACIAL -->
-              <v-col cols="12" lg="4">
-                <div class="sub-panel pa-3 h-100">
-                  <div class="d-flex align-center justify-space-between mb-2">
-                    <span class="text-xs font-weight-bold text-muted uppercase">Prancheta Tática Oficial</span>
-                    <span class="text-xs text-primary font-mono">Raio: &plusmn;{{ atletaSelecionado.raioAcao }}m</span>
-                  </div>
+              <div class="d-flex justify-space-between align-center mt-3 text-caption text-medium-emphasis">
+                <span>&bull; Marcador Vermelho: Centroide Posicional (#{{ atletaSelecionado.id }})</span>
+                <span>&bull; Circulo Pontilhado: Raio de Acao Tatico</span>
+                <span>&bull; Pontos Verdes: Amostragem das Coordenadas no Tempo</span>
+              </div>
+            </v-window-item>
 
-                  <!-- Campo de Futebol SVG com Marcacao Exata -->
-                  <div class="pitch-container pa-2 mb-3">
-                    <svg viewBox="0 0 1050 680" class="tactical-pitch-svg" xmlns="http://www.w3.org/2000/svg">
-                      <defs>
-                        <pattern id="stripes-dossier" width="105" height="680" patternUnits="userSpaceOnUse">
-                          <rect x="0" width="52.5" height="680" fill="#143022" />
-                          <rect x="52.5" width="52.5" height="680" fill="#0f261b" />
-                        </pattern>
-                      </defs>
-                      <rect width="1050" height="680" fill="url(#stripes-dossier)" rx="6" />
+            <!-- ABA 4: RADAR COMPARATIVO (ATLETA VS TIME) -->
+            <v-window-item value="radar">
+              <div class="text-subtitle-2 font-weight-bold text-uppercase text-medium-emphasis mb-2">
+                Comparativo Multidimensional: Atleta #{{ atletaSelecionado.id }} vs Media do Elenco
+              </div>
 
-                      <rect x="40" y="40" width="970" height="600" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.85" />
-                      <line x1="525" y1="40" x2="525" y2="640" stroke="#ffffff" stroke-width="2.5" opacity="0.85" />
-                      <circle cx="525" cy="340" r="91.5" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.85" />
-
-                      <rect x="40" y="160" width="165" height="360" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.85" />
-                      <rect x="845" y="160" width="165" height="360" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.85" />
-
-                      <!-- Trilha de Coordenadas -->
-                      <g>
-                        <circle
-                          v-for="(pt, idx) in atletaSelecionado.amostrasPosicao"
-                          :key="'trilha-' + idx"
-                          :cx="pt.x * 10"
-                          :cy="pt.y * 10"
-                          r="5"
-                          fill="#3e885b"
-                          opacity="0.35"
-                        />
-                      </g>
-
-                      <!-- Raio de Acao -->
-                      <circle
-                        :cx="atletaSelecionado.centroideX * 10"
-                        :cy="atletaSelecionado.centroideY * 10"
-                        :r="Math.max(35, (atletaSelecionado.raioAcao || 16) * 10)"
-                        fill="rgba(62, 136, 91, 0.18)"
-                        stroke="#3e885b"
-                        stroke-width="1.5"
-                        stroke-dasharray="6,4"
-                      />
-
-                      <!-- Marcador do Jogador -->
-                      <g :transform="'translate(' + (atletaSelecionado.centroideX * 10) + ',' + (atletaSelecionado.centroideY * 10) + ')'">
-                        <circle r="18" fill="#3e885b" stroke="#ffffff" stroke-width="2.5" />
-                        <text x="0" y="6" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="900">
-                          {{ atletaSelecionado.id }}
-                        </text>
-                      </g>
-                    </svg>
-                  </div>
-
-                  <!-- Resumo Posicional para a Banca -->
-                  <div class="text-caption text-slate-300">
-                    <div class="d-flex justify-space-between py-1 border-b">
-                      <span>Posicionamento Médio (Centroide):</span>
-                      <span class="font-mono font-weight-bold text-white">X={{ atletaSelecionado.centroideX }}m, Y={{ atletaSelecionado.centroideY }}m</span>
-                    </div>
-                    <div class="d-flex justify-space-between py-1 border-b">
-                      <span>Amplitude de Cobertura (Raio de Ação):</span>
-                      <span class="font-mono font-weight-bold text-white">&plusmn;{{ atletaSelecionado.raioAcao }} m</span>
-                    </div>
-                    <div class="d-flex justify-space-between py-1">
-                      <span>Função Tática Estimada:</span>
-                      <span class="font-weight-bold text-primary">{{ atletaSelecionado.posicaoSugerida }}</span>
-                    </div>
-                  </div>
-                </div>
-              </v-col>
-
-              <!-- COLUNA 2: RADAR DE RENDIMENTO VS ELENCO -->
-              <v-col cols="12" lg="4">
-                <div class="sub-panel pa-3 h-100">
-                  <div class="d-flex align-center justify-space-between mb-2">
-                    <span class="text-xs font-weight-bold text-muted uppercase">Radar Multidimensional</span>
-                    <div class="d-flex align-center gap-2 text-xs">
-                      <span class="text-primary font-weight-bold">&bull; Jogador {{ atletaSelecionado.id }}</span>
-                      <span class="text-muted">&bull; Média Time</span>
-                    </div>
-                  </div>
-
-                  <!-- Grafico de Radar SVG -->
-                  <div class="radar-box pa-2 text-center mb-3">
-                    <svg viewBox="0 0 400 320" class="radar-svg">
-                      <!-- Grid Poligonal -->
+              <v-row align="center">
+                <!-- Grafico de Radar em SVG -->
+                <v-col cols="12" md="7">
+                  <div class="radar-container pa-2 text-center">
+                    <svg viewBox="0 0 400 400" class="radar-svg">
+                      <!-- Circulos / Poligonos de Nivel do Radar (20%, 40%, 60%, 80%, 100%) -->
                       <polygon
-                        v-for="nivel in [0.25, 0.50, 0.75, 1.0]"
+                        v-for="nivel in [0.2, 0.4, 0.6, 0.8, 1.0]"
                         :key="'grid-' + nivel"
                         :points="gerarPoligonoGrid(nivel)"
                         fill="none"
-                        stroke="rgba(255,255,255,0.08)"
-                        stroke-width="1"
+                        stroke="rgba(255,255,255,0.12)"
+                        stroke-width="1.5"
                       />
 
-                      <!-- Eixos -->
+                      <!-- Linhas dos Eixos Radiais -->
                       <line
                         v-for="(eixo, i) in eixosRadar"
                         :key="'axis-' + i"
                         x1="200"
-                        y1="160"
+                        y1="200"
                         :x2="calcularCoordenadaRadar(i, 1.0).x"
                         :y2="calcularCoordenadaRadar(i, 1.0).y"
-                        stroke="rgba(255,255,255,0.1)"
+                        stroke="rgba(255,255,255,0.15)"
                         stroke-width="1"
                       />
 
-                      <!-- Camada Media do Time -->
+                      <!-- Camada 1: Media do Time -->
                       <polygon
                         :points="gerarPontosRadar(dadosRadarTime)"
-                        fill="rgba(148, 163, 184, 0.15)"
-                        stroke="#94a3b8"
-                        stroke-width="1.5"
-                        stroke-dasharray="3,3"
-                      />
-
-                      <!-- Camada Atleta -->
-                      <polygon
-                        :points="gerarPontosRadar(dadosRadarAtleta)"
-                        fill="rgba(62, 136, 91, 0.35)"
-                        stroke="#3e885b"
+                        fill="rgba(56, 189, 248, 0.25)"
+                        stroke="#38bdf8"
                         stroke-width="2"
                       />
 
-                      <!-- Vertices Atleta -->
+                      <!-- Camada 2: Atleta Selecionado -->
+                      <polygon
+                        :points="gerarPontosRadar(dadosRadarAtleta)"
+                        fill="rgba(16, 185, 129, 0.45)"
+                        stroke="#10b981"
+                        stroke-width="3"
+                      />
+
+                      <!-- Vertices do Atleta -->
                       <circle
                         v-for="(val, i) in dadosRadarAtleta"
                         :key="'vert-' + i"
                         :cx="calcularCoordenadaRadar(i, val).x"
                         :cy="calcularCoordenadaRadar(i, val).y"
-                        r="3.5"
-                        fill="#3e885b"
+                        r="5"
+                        fill="#10b981"
                         stroke="#ffffff"
                         stroke-width="1.5"
                       />
@@ -475,219 +986,193 @@
                       <text
                         v-for="(eixo, i) in eixosRadar"
                         :key="'label-' + i"
-                        :x="calcularCoordenadaRadar(i, 1.24).x"
-                        :y="calcularCoordenadaRadar(i, 1.24).y + 4"
+                        :x="calcularCoordenadaRadar(i, 1.18).x"
+                        :y="calcularCoordenadaRadar(i, 1.18).y + 4"
                         text-anchor="middle"
-                        fill="#cbd5e1"
-                        font-size="10"
-                        font-weight="700"
+                        fill="#94a3b8"
+                        font-size="11"
+                        font-weight="bold"
                       >
                         {{ eixo }}
                       </text>
                     </svg>
                   </div>
 
-                  <!-- Tabela dos 6 Pilares -->
-                  <div class="text-caption text-slate-300">
-                    <div class="d-flex justify-space-between py-1 border-b">
-                      <span>Volume Total:</span>
-                      <span class="font-mono font-weight-bold text-white">{{ atletaSelecionado.distanciaTotal.toFixed(0) }} m</span>
+                  <div class="d-flex justify-center gap-4 mt-2">
+                    <div class="d-flex align-center">
+                      <span style="display:inline-block; width:14px; height:14px; background:#10b981; border-radius:3px;" class="mr-2"></span>
+                      <span class="text-caption font-weight-bold">Atleta #{{ atletaSelecionado.id }}</span>
                     </div>
-                    <div class="d-flex justify-space-between py-1 border-b">
-                      <span>Ritmo (Metros/Minuto):</span>
-                      <span class="font-mono font-weight-bold text-white">{{ atletaSelecionado.metrosPorMinuto.toFixed(1) }} M/min</span>
-                    </div>
-                    <div class="d-flex justify-space-between py-1 border-b">
-                      <span>Velocidade Máxima:</span>
-                      <span class="font-mono font-weight-bold text-warning">{{ atletaSelecionado.velocidadeMaxima.toFixed(1) }} km/h</span>
-                    </div>
-                    <div class="d-flex justify-space-between py-1 border-b">
-                      <span>Arrancadas > 2,5 m/s²:</span>
-                      <span class="font-mono font-weight-bold text-success">+{{ atletaSelecionado.aceleracoesAltas || 0 }} ações</span>
-                    </div>
-                    <div class="d-flex justify-space-between py-1">
-                      <span>Carga Mecânica (Player Load):</span>
-                      <span class="font-mono font-weight-bold text-white">{{ atletaSelecionado.playerLoad?.toFixed(0) }}</span>
+                    <div class="d-flex align-center ml-4">
+                      <span style="display:inline-block; width:14px; height:14px; background:#38bdf8; border-radius:3px;" class="mr-2"></span>
+                      <span class="text-caption font-weight-bold">Média do Elenco</span>
                     </div>
                   </div>
+                </v-col>
+
+                <!-- Tabela dos 6 Pilares -->
+                <v-col cols="12" md="5">
+                  <v-card color="surface-variant" class="pa-3" elevation="0">
+                    <div class="text-caption font-weight-bold text-uppercase mb-2 text-primary">
+                      Metricas Normalizadas do Radar
+                    </div>
+                    <div class="d-flex flex-column gap-2 text-body-2">
+                      <div class="d-flex justify-space-between py-1 border-b">
+                        <span>Volume (Distancia):</span>
+                        <span class="font-weight-bold">{{ atletaSelecionado.distanciaTotal.toFixed(0) }} m</span>
+                      </div>
+                      <div class="d-flex justify-space-between py-1 border-b">
+                        <span>Intensidade (M/min):</span>
+                        <span class="font-weight-bold">{{ atletaSelecionado.metrosPorMinuto.toFixed(1) }} M/min</span>
+                      </div>
+                      <div class="d-flex justify-space-between py-1 border-b">
+                        <span>Velocidade Maxima:</span>
+                        <span class="font-weight-bold">{{ atletaSelecionado.velocidadeMaxima.toFixed(1) }} km/h</span>
+                      </div>
+                      <div class="d-flex justify-space-between py-1 border-b">
+                        <span>Tiros de Sprint:</span>
+                        <span class="font-weight-bold">{{ atletaSelecionado.sprintsContagem || 0 }} ações</span>
+                      </div>
+                      <div class="d-flex justify-space-between py-1 border-b">
+                        <span>Acelerações Altas:</span>
+                        <span class="font-weight-bold">{{ atletaSelecionado.aceleracoesAltas || 0 }} ações</span>
+                      </div>
+                      <div class="d-flex justify-space-between py-1">
+                        <span>Player Load:</span>
+                        <span class="font-weight-bold">{{ atletaSelecionado.playerLoad.toFixed(0) }}</span>
+                      </div>
+                    </div>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-window-item>
+
+            <!-- ABA 5: FISIOLOGIA & ESCALA DE BORG -->
+            <v-window-item value="fisiologia">
+              <div class="text-subtitle-2 font-weight-bold text-uppercase text-medium-emphasis mb-2">
+                Cruzamento Carga Externa (Rastreamento) x Carga Interna (Escala de Borg CR-10)
+              </div>
+
+              <!-- Fundamentação Científica da Carga Interna -->
+              <v-alert
+                type="info"
+                variant="tonal"
+                density="compact"
+                class="mb-4"
+                icon="mdi-calculator-variant-outline"
+              >
+                <div class="text-caption">
+                  <strong>Fundamentação Teórica (Método Foster, 1998):</strong>
+                  A Carga Interna da Sessão integra a resposta psicofisiológica do atleta: <code>Carga (U.A.) = PSE (Escala de Borg CR-10) &times; Duração (minutos)</code>, quantificada em Unidades Arbitrárias (U.A.).
                 </div>
-              </v-col>
+              </v-alert>
 
-              <!-- COLUNA 3: FISIOLOGIA & ESCALA DE BORG CR-10 (METODO DE FOSTER) -->
-              <v-col cols="12" lg="4">
-                <div class="sub-panel pa-3 h-100">
-                  <div class="d-flex align-center justify-space-between mb-2">
-                    <span class="text-xs font-weight-bold text-muted uppercase">Carga Interna &bull; Escala de Borg CR-10</span>
-                    <span class="text-xs text-primary font-weight-bold">Método Foster (1998)</span>
-                  </div>
-
-                  <!-- Controle da Escala de Borg -->
-                  <div class="d-flex align-center justify-space-between mb-1">
-                    <span class="text-caption text-white font-weight-bold">Percepção de Esforço (PSE):</span>
-                    <v-chip size="small" :color="corBorg(valorBorg)" variant="flat" class="font-weight-bold font-mono">
-                      Nível {{ valorBorg }} &bull; {{ descricaoBorg(valorBorg) }}
-                    </v-chip>
-                  </div>
-
-                  <v-slider
-                    v-model="valorBorg"
-                    :min="0"
-                    :max="10"
-                    :step="1"
-                    show-ticks="always"
-                    tick-size="4"
-                    color="primary"
-                    track-color="surface-variant"
-                    class="my-1"
-                  ></v-slider>
-
-                  <!-- Calculo Foster em Destaque -->
-                  <div class="foster-box pa-3 my-2 text-center">
-                    <span class="text-xs text-muted uppercase font-weight-bold">Carga da Sessão (Método de Foster)</span>
-                    <div class="text-h5 font-weight-black text-primary font-mono mt-1">
-                      {{ valorBorg * duracaoSessaoMinutos }} <small>U.A.</small>
-                    </div>
-                    <span class="text-xs text-slate-300 font-mono">
-                      PSE ({{ valorBorg }}) &times; {{ duracaoSessaoMinutos }} minutos de jogo = Carga em Unidades Arbitrárias
-                    </span>
-                  </div>
-
-                  <!-- Indices de Eficiencia -->
-                  <div class="d-flex gap-2 mb-3">
-                    <div class="metric-card flex-grow-1 pa-2 text-center">
-                      <span class="metric-title">Sprint / Borg</span>
-                      <span class="text-caption font-weight-bold text-white font-mono">
-                        {{ ((atletaSelecionado.distanciaSprint || 0) / Math.max(1, valorBorg)).toFixed(1) }} m/ponto
-                      </span>
-                    </div>
-                    <div class="metric-card flex-grow-1 pa-2 text-center">
-                      <span class="metric-title">Carga Mecânica / Borg</span>
-                      <span class="text-caption font-weight-bold text-white font-mono">
-                        {{ ((atletaSelecionado.playerLoad || 0) / Math.max(1, valorBorg)).toFixed(1) }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <!-- Parecer da Comissao Tecnica -->
-                  <div class="clinical-box pa-3">
-                    <div class="d-flex align-center mb-1">
-                      <v-icon :icon="diagnosticoAtleta.icone" :color="diagnosticoAtleta.cor" size="18" class="mr-2"></v-icon>
-                      <span class="text-caption font-weight-bold text-white">{{ diagnosticoAtleta.titulo }}</span>
-                    </div>
-                    <p class="text-xs text-slate-300 mb-2">{{ diagnosticoAtleta.mensagem }}</p>
-                    <div class="text-xs border-t pt-1 text-primary font-weight-bold">
-                      Conduta Recomendada: <span class="text-slate-300 font-weight-regular">{{ diagnosticoAtleta.recomendacao }}</span>
-                    </div>
-                  </div>
+              <!-- Input da Escala de Borg -->
+              <v-card color="surface-variant" class="pa-4 mb-4" elevation="0">
+                <div class="d-flex justify-space-between align-center mb-2">
+                  <span class="text-body-2 font-weight-bold">Percepção Subjetiva de Esforço (PSE / Borg CR-10):</span>
+                  <v-chip size="small" :color="corBorg(valorBorg)" class="font-weight-black">
+                    Borg {{ valorBorg }} - {{ descricaoBorg(valorBorg) }}
+                  </v-chip>
                 </div>
-              </v-col>
-            </v-row>
-          </div>
+                <v-slider
+                  v-model="valorBorg"
+                  :min="0"
+                  :max="10"
+                  :step="1"
+                  show-ticks="always"
+                  tick-size="4"
+                  color="primary"
+                  track-color="surface"
+                ></v-slider>
 
-        </div>
+                <v-row dense class="mt-2">
+                  <v-col cols="12" sm="6">
+                    <v-text-field
+                      v-model.number="duracaoSessaoMinutos"
+                      label="Duração da Sessão (minutos)"
+                      type="number"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="12" sm="6">
+                    <v-card color="surface" class="pa-2 text-center" elevation="0">
+                      <div class="text-caption text-medium-emphasis">Carga da Sessão (Método Foster)</div>
+                      <div class="text-h6 font-weight-bold text-secondary">
+                        {{ valorBorg * duracaoSessaoMinutos }} <span class="text-caption">U.A. (Unidades Arbitrárias)</span>
+                      </div>
+                    </v-card>
+                  </v-col>
+                </v-row>
+              </v-card>
 
-        <!-- ESTADO VAZIO: NENHUM DADO CARREGADO -->
-        <div v-else class="empty-box pa-10 text-center">
-          <div class="logo-container mx-auto mb-4" style="height: 70px;">
-            <svg viewBox="135 155 625 195" style="height: 64px; width: auto;" preserveAspectRatio="xMidYMid meet">
-              <image href="/logo-visao90.png" width="897" height="600" />
-            </svg>
-          </div>
-          <h2 class="text-h6 font-weight-bold text-white">Pronto para a Avaliação da Partida</h2>
-          <p class="text-caption text-muted mt-2" style="max-width: 520px; margin: 0 auto;">
-            Clique no botão abaixo para carregar a amostra oficial com 11 atletas escalados e apresentar todos os cálculos cinemáticos, mapa tático e escala de Borg para a banca.
-          </p>
-          <div class="mt-5 d-flex justify-center gap-3">
-            <v-btn
-              color="primary"
-              variant="flat"
-              prepend-icon="mdi-account-group"
-              @click="carregarMockDemonstracao"
-              class="font-weight-bold"
-            >
-              Carregar Dados da Partida (11 Atletas)
-            </v-btn>
-            <v-btn
-              color="surface-variant"
-              variant="flat"
-              prepend-icon="mdi-file-upload-outline"
-              @click="modalImportarAberto = true"
-              class="font-weight-bold"
-            >
-              Importar Arquivo CSV
-            </v-btn>
-          </div>
-        </div>
+              <!-- Índices Avançados de Eficiência -->
+              <div class="text-subtitle-2 font-weight-bold text-uppercase text-medium-emphasis mb-2">
+                Índices de Eficiência Física & Relação Carga/Esforço
+              </div>
 
-      </v-container>
-    </v-main>
+              <v-row dense class="mb-4">
+                <v-col cols="6" sm="6">
+                  <v-card class="pa-3 text-center" variant="outlined" border>
+                    <div class="text-caption text-medium-emphasis">Índice HSR / Borg</div>
+                    <div class="text-h5 font-weight-black text-primary">
+                      {{ ((atletaSelecionado.distanciaSprint || 0) / Math.max(1, valorBorg)).toFixed(1) }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">Metros de Sprint por ponto de PSE</div>
+                  </v-card>
+                </v-col>
 
-    <!-- Modal de Importacao de Dados -->
-    <v-dialog v-model="modalImportarAberto" max-width="600">
-      <v-card class="panel-box pa-4" elevation="10" border>
-        <div class="d-flex align-center justify-space-between mb-3 border-b pb-3">
-          <div>
-            <h3 class="text-subtitle-1 font-weight-bold text-white">Importar Dados Cinemáticos</h3>
-            <p class="text-xs text-muted">Arquivo de rastreamento ótico ou GPS (25 Hz)</p>
-          </div>
-          <v-btn icon="mdi-close" variant="text" size="small" @click="modalImportarAberto = false"></v-btn>
-        </div>
+                <v-col cols="6" sm="6">
+                  <v-card class="pa-3 text-center" variant="outlined" border>
+                    <div class="text-caption text-medium-emphasis">Player Load / Borg</div>
+                    <div class="text-h5 font-weight-black text-warning">
+                      {{ ((atletaSelecionado.playerLoad || 0) / Math.max(1, valorBorg)).toFixed(1) }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">Carga Mecânica por ponto de PSE</div>
+                  </v-card>
+                </v-col>
+              </v-row>
 
-        <v-tabs v-model="tabModalImport" color="primary" density="compact" class="mb-4">
-          <v-tab value="file">Arquivo CSV Local</v-tab>
-          <v-tab value="url">Repositório / URL</v-tab>
-        </v-tabs>
+              <!-- Parecer Fisiológico da Comissão Técnica -->
+              <div class="text-subtitle-2 font-weight-bold text-uppercase text-medium-emphasis mb-2">
+                Diagnóstico Fisiológico Integrado da Comissão Técnica
+              </div>
 
-        <v-window v-model="tabModalImport">
-          <!-- Upload -->
-          <v-window-item value="file">
-            <v-file-input
-              v-model="arquivoSelecionado"
-              label="Selecione o arquivo CSV"
-              accept=".csv,text/csv"
-              variant="outlined"
-              density="compact"
-              color="primary"
-              clearable
-              hide-details
-              class="mb-3"
-            ></v-file-input>
-            <v-btn
-              color="primary"
-              block
-              :loading="carregando"
-              :disabled="!arquivoSelecionado"
-              @click="processarPorUpload"
-              class="font-weight-bold text-caption"
-            >
-              Processar Cinemática
-            </v-btn>
-          </v-window-item>
+              <v-alert
+                :type="diagnosticoAtleta.tipo"
+                variant="tonal"
+                class="mb-0"
+              >
+                <template v-slot:title>
+                  <div class="font-weight-bold">{{ diagnosticoAtleta.titulo }}</div>
+                </template>
+                <div class="text-body-2 mb-2">{{ diagnosticoAtleta.mensagem }}</div>
+                <div class="text-caption font-weight-bold text-primary">
+                  Conduta Recomendada: {{ diagnosticoAtleta.recomendacao }}
+                </div>
+              </v-alert>
+            </v-window-item>
 
-          <!-- URL -->
-          <v-window-item value="url">
-            <v-text-field
-              v-model="urlArquivo"
-              label="URL do arquivo CSV"
-              variant="outlined"
-              density="compact"
-              color="primary"
-              hide-details
-              placeholder="https://..."
-              class="mb-3"
-            ></v-text-field>
-            <v-btn
-              color="primary"
-              block
-              :loading="carregando"
-              :disabled="!urlArquivo"
-              @click="processarPorUrl"
-              class="font-weight-bold text-caption"
-            >
-              Baixar e Processar
-            </v-btn>
-          </v-window-item>
-        </v-window>
+          </v-window>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions class="pa-4">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="modalDetalhesAberto = false">Fechar</v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            prepend-icon="mdi-check"
+            @click="salvarSimulacaoBorg"
+            class="font-weight-bold"
+          >
+            Registrar Avaliação Fisiológica
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
   </v-app>
@@ -697,8 +1182,7 @@
 import { ref, computed } from 'vue'
 
 // Estado da UI
-const modalImportarAberto = ref(false)
-const tabModalImport = ref('file')
+const tabInput = ref('url')
 const arquivoSelecionado = ref(null)
 const urlArquivo = ref('')
 const carregando = ref(false)
@@ -708,27 +1192,23 @@ const filtroBusca = ref('')
 
 // Dados dos Atletas
 const atletas = ref([])
-const atletaSelecionadoId = ref('7')
 
-const atletaSelecionado = computed(() => {
-  if (atletas.value.length === 0) return null
-  return atletas.value.find(a => String(a.id) === String(atletaSelecionadoId.value)) || atletas.value[0]
-})
-
-function selecionarAtletaParaInspecao(atleta) {
-  atletaSelecionadoId.value = atleta.id
-  // Rola a tela suavemente para a ficha do atleta
-  const el = document.getElementById('dossie-atleta')
-  if (el) el.scrollIntoView({ behavior: 'smooth' })
-}
-
-function onTrocarAtleta(val) {
-  atletaSelecionadoId.value = val
-}
-
-// Parametros Fisiologicos
+// Estado do Modal de Detalhes
+const modalDetalhesAberto = ref(false)
+const atletaSelecionado = ref(null)
+const abaModal = ref('cinematica')
 const valorBorg = ref(6)
 const duracaoSessaoMinutos = ref(90)
+
+// Presets da Metrica Sports
+const URL_METRICA_HOME = 'https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Home_Team.csv'
+const URL_METRICA_AWAY = 'https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Away_Team.csv'
+
+function aplicarPreset(tipo) {
+  tabInput.value = 'url'
+  if (tipo === 'home') urlArquivo.value = URL_METRICA_HOME
+  if (tipo === 'away') urlArquivo.value = URL_METRICA_AWAY
+}
 
 // Computeds Gerais
 const atletasFiltrados = computed(() => {
@@ -774,10 +1254,14 @@ function percentualZona(atleta, campo) {
   return ((atleta[campo] || 0) / atleta.distanciaTotal) * 100
 }
 
-// Radar de Performance
-const eixosRadar = ['Volume', 'Ritmo M/min', 'Vel. Máx', 'Sprints', 'Arrancadas', 'Player Load']
+// Radar de Performance (SVG)
+const eixosRadar = ['Volume', 'Intensidade', 'Vel. Max', 'Sprints', 'Acelerações', 'Player Load']
 
-const dadosRadarTime = computed(() => [0.65, 0.65, 0.70, 0.60, 0.65, 0.65])
+const dadosRadarTime = computed(() => {
+  if (atletas.value.length === 0) return [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+  // Normalização relativa (0 a 1) para o time
+  return [0.7, 0.7, 0.75, 0.65, 0.7, 0.7]
+})
 
 const dadosRadarAtleta = computed(() => {
   if (!atletaSelecionado.value || atletas.value.length === 0) return [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
@@ -802,8 +1286,8 @@ const dadosRadarAtleta = computed(() => {
 
 function calcularCoordenadaRadar(indice, proporcao) {
   const centroX = 200
-  const centroY = 160
-  const raioMax = 100
+  const centroY = 200
+  const raioMax = 140
   const angulo = (indice / 6) * 2 * Math.PI - Math.PI / 2
   const r = raioMax * proporcao
   return {
@@ -826,7 +1310,16 @@ function gerarPoligonoGrid(proporcao) {
   }).join(' ')
 }
 
-// Upload CSV
+// Modal de Detalhes
+function abrirPerfilDetalhado(atleta) {
+  atletaSelecionado.value = atleta
+  abaModal.value = 'cinematica'
+  valorBorg.value = 6
+  duracaoSessaoMinutos.value = 90
+  modalDetalhesAberto.value = true
+}
+
+// Envio para o Backend (Upload de Arquivo)
 async function processarPorUpload() {
   if (!arquivoSelecionado.value) return
 
@@ -847,18 +1340,16 @@ async function processarPorUpload() {
     if (!json.sucesso) throw new Error(json.erro || 'Falha ao processar arquivo.')
 
     atletas.value = json.dados
-    atletaSelecionadoId.value = json.dados[0]?.id || '1'
-    modalImportarAberto.value = false
-    mensagemSucesso.value = `Sessão processada com sucesso: ${json.quantidadeJogadores} atletas analisados.`
+    mensagemSucesso.value = `Sucesso! Foram calculadas as metricas detalhadas de ${json.quantidadeJogadores} atletas e sincronizadas com o Supabase.`
   } catch (err) {
-    console.error('Erro na requisição:', err)
-    mensagemErro.value = `Erro de comunicação: ${err.message}`
+    console.error('Erro na requisicao:', err)
+    mensagemErro.value = `Erro ao comunicar com o backend: ${err.message}`
   } finally {
     carregando.value = false
   }
 }
 
-// URL Externa
+// Envio para o Backend (URL da Metrica)
 async function processarPorUrl() {
   if (!urlArquivo.value) return
 
@@ -879,18 +1370,16 @@ async function processarPorUrl() {
     if (!json.sucesso) throw new Error(json.erro || 'Falha ao processar URL.')
 
     atletas.value = json.dados
-    atletaSelecionadoId.value = json.dados[0]?.id || '1'
-    modalImportarAberto.value = false
-    mensagemSucesso.value = `Dados da partida carregados com sucesso (${json.quantidadeJogadores} atletas).`
+    mensagemSucesso.value = `Sucesso! Rastreamento processado para ${json.quantidadeJogadores} atletas e salvo no Supabase.`
   } catch (err) {
-    console.error('Erro na requisição:', err)
-    mensagemErro.value = `Erro ao carregar: ${err.message}`
+    console.error('Erro na requisicao:', err)
+    mensagemErro.value = `Erro ao baixar/processar da URL: ${err.message}`
   } finally {
     carregando.value = false
   }
 }
 
-// Mock de 11 Atletas
+// Mock de Demonstracao Completa (11 Atletas)
 function carregarMockDemonstracao() {
   atletas.value = [
     {
@@ -950,8 +1439,8 @@ function carregarMockDemonstracao() {
       distanciaMediaSprint: 25.0,
       potenciaMetabolicaMedia: 11.8,
       distanciaAltaPotenciaMetabolica: 1850.0,
-      centroideX: 52.0,
-      centroideY: 57.0,
+      centroideX: 55.0,
+      centroideY: 58.0,
       raioAcao: 24.5,
       amostrasPosicao: [
         { x: 35.0, y: 56.0 }, { x: 48.0, y: 59.0 }, { x: 65.0, y: 62.0 }, { x: 78.0, y: 60.0 }, { x: 42.0, y: 57.0 }
@@ -983,7 +1472,7 @@ function carregarMockDemonstracao() {
       potenciaMetabolicaMedia: 9.1,
       distanciaAltaPotenciaMetabolica: 1120.0,
       centroideX: 32.0,
-      centroideY: 25.0,
+      centroideY: 26.0,
       raioAcao: 16.8,
       amostrasPosicao: [
         { x: 26.0, y: 24.0 }, { x: 34.0, y: 27.0 }, { x: 38.0, y: 25.0 }, { x: 29.0, y: 28.0 }
@@ -1015,7 +1504,7 @@ function carregarMockDemonstracao() {
       potenciaMetabolicaMedia: 8.8,
       distanciaAltaPotenciaMetabolica: 980.0,
       centroideX: 33.0,
-      centroideY: 43.0,
+      centroideY: 42.0,
       raioAcao: 15.9,
       amostrasPosicao: [
         { x: 28.0, y: 40.0 }, { x: 35.0, y: 44.0 }, { x: 39.0, y: 41.0 }, { x: 30.0, y: 43.0 }
@@ -1046,8 +1535,8 @@ function carregarMockDemonstracao() {
       distanciaMediaSprint: 25.0,
       potenciaMetabolicaMedia: 11.2,
       distanciaAltaPotenciaMetabolica: 1680.0,
-      centroideX: 50.0,
-      centroideY: 11.0,
+      centroideX: 52.0,
+      centroideY: 12.0,
       raioAcao: 23.8,
       amostrasPosicao: [
         { x: 34.0, y: 11.0 }, { x: 49.0, y: 13.0 }, { x: 67.0, y: 10.0 }, { x: 75.0, y: 14.0 }
@@ -1055,7 +1544,7 @@ function carregarMockDemonstracao() {
     },
     {
       id: '5',
-      posicaoSugerida: 'Volante Central',
+      posicaoSugerida: 'Volante / Primeiro Meio-Campo',
       distanciaTotal: 11400.0,
       velocidadeMaxima: 30.2,
       velocidadeMedia: 7.6,
@@ -1078,7 +1567,7 @@ function carregarMockDemonstracao() {
       distanciaMediaSprint: 22.7,
       potenciaMetabolicaMedia: 12.4,
       distanciaAltaPotenciaMetabolica: 2100.0,
-      centroideX: 47.0,
+      centroideX: 48.0,
       centroideY: 34.0,
       raioAcao: 21.0,
       amostrasPosicao: [
@@ -1110,8 +1599,8 @@ function carregarMockDemonstracao() {
       distanciaMediaSprint: 24.0,
       potenciaMetabolicaMedia: 12.7,
       distanciaAltaPotenciaMetabolica: 2240.0,
-      centroideX: 58.0,
-      centroideY: 38.0,
+      centroideX: 56.0,
+      centroideY: 36.0,
       raioAcao: 22.4,
       amostrasPosicao: [
         { x: 46.0, y: 32.0 }, { x: 58.0, y: 40.0 }, { x: 66.0, y: 35.0 }, { x: 52.0, y: 38.0 }
@@ -1119,7 +1608,7 @@ function carregarMockDemonstracao() {
     },
     {
       id: '10',
-      posicaoSugerida: 'Meio-Campista Ofensivo',
+      posicaoSugerida: 'Meio-Campista Ofensivo / Armador',
       distanciaTotal: 10200.0,
       velocidadeMaxima: 31.1,
       velocidadeMedia: 6.8,
@@ -1142,8 +1631,8 @@ function carregarMockDemonstracao() {
       distanciaMediaSprint: 25.0,
       potenciaMetabolicaMedia: 10.6,
       distanciaAltaPotenciaMetabolica: 1540.0,
-      centroideX: 63.0,
-      centroideY: 28.0,
+      centroideX: 62.0,
+      centroideY: 32.0,
       raioAcao: 19.5,
       amostrasPosicao: [
         { x: 54.0, y: 28.0 }, { x: 64.0, y: 35.0 }, { x: 72.0, y: 30.0 }, { x: 60.0, y: 34.0 }
@@ -1151,7 +1640,7 @@ function carregarMockDemonstracao() {
     },
     {
       id: '7',
-      posicaoSugerida: 'Ponta Direita',
+      posicaoSugerida: 'Ponta / Extremo Direito',
       distanciaTotal: 11250.0,
       velocidadeMaxima: 34.8,
       velocidadeMedia: 7.5,
@@ -1174,8 +1663,8 @@ function carregarMockDemonstracao() {
       distanciaMediaSprint: 23.6,
       potenciaMetabolicaMedia: 12.3,
       distanciaAltaPotenciaMetabolica: 2080.0,
-      centroideX: 70.0,
-      centroideY: 54.0,
+      centroideX: 68.0,
+      centroideY: 55.0,
       raioAcao: 24.2,
       amostrasPosicao: [
         { x: 55.0, y: 52.0 }, { x: 72.0, y: 58.0 }, { x: 88.0, y: 56.0 }, { x: 64.0, y: 54.0 }
@@ -1183,7 +1672,7 @@ function carregarMockDemonstracao() {
     },
     {
       id: '11',
-      posicaoSugerida: 'Ponta Esquerda',
+      posicaoSugerida: 'Ponta / Extremo Esquerdo',
       distanciaTotal: 10950.0,
       velocidadeMaxima: 34.1,
       velocidadeMedia: 7.3,
@@ -1206,8 +1695,8 @@ function carregarMockDemonstracao() {
       distanciaMediaSprint: 24.2,
       potenciaMetabolicaMedia: 11.9,
       distanciaAltaPotenciaMetabolica: 1920.0,
-      centroideX: 68.0,
-      centroideY: 14.0,
+      centroideX: 66.0,
+      centroideY: 15.0,
       raioAcao: 23.5,
       amostrasPosicao: [
         { x: 52.0, y: 14.0 }, { x: 70.0, y: 12.0 }, { x: 85.0, y: 16.0 }, { x: 62.0, y: 13.0 }
@@ -1215,7 +1704,7 @@ function carregarMockDemonstracao() {
     },
     {
       id: '9',
-      posicaoSugerida: 'Centroavante',
+      posicaoSugerida: 'Centroavante / Atacante',
       distanciaTotal: 10100.0,
       velocidadeMaxima: 33.5,
       velocidadeMedia: 6.7,
@@ -1238,7 +1727,7 @@ function carregarMockDemonstracao() {
       distanciaMediaSprint: 25.0,
       potenciaMetabolicaMedia: 10.8,
       distanciaAltaPotenciaMetabolica: 1680.0,
-      centroideX: 76.0,
+      centroideX: 74.0,
       centroideY: 34.0,
       raioAcao: 18.2,
       amostrasPosicao: [
@@ -1246,219 +1735,99 @@ function carregarMockDemonstracao() {
       ]
     }
   ]
-  atletaSelecionadoId.value = '7'
-  mensagemSucesso.value = 'Dados da partida carregados com sucesso: 11 atletas monitorados com métricas completas.'
+  mensagemSucesso.value = 'Demonstracao completa carregada com sucesso! 11 atletas distribuidos por posicoes taticas com calculos inerciais, metabolicos e espaciais.'
 }
 
-// Escala de Borg CR-10
+// Funcoes Fisiologicas (Borg CR-10)
 function descricaoBorg(val) {
-  if (val <= 1) return 'Muito Leve (Repouso)'
+  if (val <= 1) return 'Muito Leve / Repouso'
   if (val <= 3) return 'Leve / Moderado'
-  if (val <= 5) return 'Pesado (Forte)'
-  if (val <= 7) return 'Muito Pesado'
+  if (val <= 5) return 'Pesado / Desafiador'
+  if (val <= 7) return 'Muito Pesado / Intenso'
   if (val <= 9) return 'Extremamente Intenso'
   return 'Exaustão Máxima'
 }
 
 function corBorg(val) {
   if (val <= 3) return 'success'
-  if (val <= 6) return 'primary'
+  if (val <= 6) return 'info'
   if (val <= 8) return 'warning'
   return 'error'
 }
 
 const diagnosticoAtleta = computed(() => {
-  if (!atletaSelecionado.value) return { titulo: '', mensagem: '', recomendacao: '', cor: 'primary', icone: 'mdi-information-outline' }
+  if (!atletaSelecionado.value) return { tipo: 'info', titulo: '', mensagem: '', recomendacao: '' }
 
   const sprint = atletaSelecionado.value.distanciaSprint || 0
   const borg = valorBorg.value
 
   if (borg >= 8 && sprint < 450) {
     return {
-      titulo: 'Alerta de Sobrecarga / Risco de Fadiga Residual',
-      mensagem: 'O atleta reportou percepção de esforço muito alta (PSE >= 8) apesar de ter produzido baixo volume de alta intensidade. Indica estresse neuromuscular acumulado ou recuperação insuficiente.',
-      recomendacao: 'Protocolo de recuperação prioritário: crioterapia, reidratação monitorada e modulação de carga no próximo microciclo.',
-      cor: 'error',
-      icone: 'mdi-alert-octagon-outline'
+      tipo: 'error',
+      titulo: 'Alerta Vermelho: Fadiga Residual / Risco Neuromuscular',
+      mensagem: 'O atleta relatou esforço desproporcionalmente alto (PSE >= 8) para um volume baixo de corrida de alta intensidade. Indica estresse acumulado ou recuperação insuficiente.',
+      recomendacao: 'Protocolo regenerativo prioritário: crioterapia, drenagem, sono estendido e teste de Creatina Quinase (CK).'
     }
   } else if (borg <= 5 && sprint >= 650) {
     return {
-      titulo: 'Prontidão Excelente & Alta Eficiência Física',
-      mensagem: 'O atleta sustentou alto volume de corridas em alta velocidade mantendo baixa percepção subjetiva de esforço. Excelente capacidade adaptativa cardiorrespiratória.',
-      recomendacao: 'Atleta em condições ideais de competição. Manter o programa de treinamento atual.',
-      cor: 'success',
-      icone: 'mdi-check-decagram-outline'
+      tipo: 'success',
+      titulo: 'Excelente Eficiência Física (Alta Prontidão)',
+      mensagem: 'O atleta sustentou alta demanda física e múltiplos tiros de sprint mantendo baixa percepção subjetiva de esforço. Ótima capacidade cardiorrespiratória.',
+      recomendacao: 'Atleta em pico de forma competitiva. Manter a carga programada e rotina nutricional habitual.'
     }
   } else if (borg >= 7) {
     return {
-      titulo: 'Alta Demanda Fisiológica da Partida',
-      mensagem: 'A percepção de cansaço reflete diretamente o elevado volume de corrida e impacto mecânico exigidos na partida.',
-      recomendacao: 'Reposição de glicogênio nas primeiras horas e descanso ativo.',
-      cor: 'warning',
-      icone: 'mdi-alert-circle-outline'
+      tipo: 'warning',
+      titulo: 'Carga Interna Elevada (Desgaste Fisiológico)',
+      mensagem: 'Partida com alto estresse metabólico compatível com a exigência física do jogo.',
+      recomendacao: 'Reidratação monitorada com eletrólitos e carga de carboidratos nas primeiras 4 horas pós-sessão.'
     }
   } else {
     return {
-      titulo: 'Resposta Fisiológica Normal e Equilibrada',
-      mensagem: 'Relação esperada entre a demanda mecânica externa e o esforço interno reportado para os 90 minutos de jogo.',
-      recomendacao: 'Seguir o plano habitual de treinamento e regeneração.',
-      cor: 'primary',
-      icone: 'mdi-information-outline'
+      tipo: 'info',
+      titulo: 'Resposta Fisiológica Equilibrada',
+      mensagem: 'A relação entre volume de corrida externa e percepção de esforço interna está perfeitamente alinhada para a duração da partida.',
+      recomendacao: 'Seguir o plano padrão de treinos e recuperação do microciclo.'
     }
   }
 })
+
+function salvarSimulacaoBorg() {
+  mensagemSucesso.value = `Avaliação registrada para o Atleta #${atletaSelecionado.value.id}! Carga Foster: ${valorBorg.value * duracaoSessaoMinutos.value} U.A. (Borg ${valorBorg.value}).`
+  modalDetalhesAberto.value = false
+}
 </script>
 
 <style scoped>
-/* Fundo Noturno Inspirado na Arte Visao90 */
 .app-background {
-  background-color: #0b110e !important;
+  background: radial-gradient(circle at 10% 15%, #0a1329 0%, #050811 90%) !important;
   color: #e2e8f0;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .max-content-width {
-  max-width: 1560px;
+  max-width: 1440px;
   margin: 0 auto;
 }
 
-/* Header */
-.app-header {
-  background-color: #080d0a;
+.glass-card {
+  background: rgba(14, 23, 42, 0.78) !important;
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  transition: all 0.3s ease;
 }
 
-.logo-container {
-  display: flex;
-  align-items: center;
-  height: 48px;
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.3) !important;
 }
 
-.logo-svg-crop {
-  height: 44px;
-  width: auto;
-  max-width: 220px;
-}
-
-.text-xs {
-  font-size: 0.72rem;
-  line-height: 1.1rem;
-}
-
-.text-muted {
-  color: #8da094;
-}
-
-/* Paineis e Caixas */
-.panel-box {
-  background-color: #121c15;
-  border: 1px solid #1f3325;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.sub-panel {
-  background-color: #0e1711;
-  border: 1px solid #1c2e21;
-  border-radius: 6px;
-}
-
-.empty-box {
-  background-color: #121c15;
-  border: 1px dashed #233b2a;
-  border-radius: 8px;
-}
-
-/* Cards de Metricas no Topo */
-.metric-card {
-  background-color: #121c15;
-  border: 1px solid #1f3325;
-  border-radius: 6px;
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-}
-
-.metric-title {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #8da094;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.metric-number {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #ffffff;
-  margin-top: 2px;
-}
-
-.metric-desc {
-  font-size: 0.72rem;
-  color: #64748b;
-  margin-top: 2px;
-}
-
-/* Tabela de Dados */
-.table-responsive {
-  overflow-x: auto;
-}
-
-.clean-table {
-  background-color: transparent !important;
-  width: 100%;
-}
-
-.clean-table th {
-  background-color: #0e1711 !important;
-  color: #8da094 !important;
-  font-size: 0.72rem !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.04em !important;
-  border-bottom: 1px solid #1f3325 !important;
-  padding: 10px 14px !important;
-}
-
-.clean-table td {
-  border-bottom: 1px solid #16241b !important;
-  padding: 10px 14px !important;
-  font-size: 0.85rem !important;
-}
-
-.active-table-row {
-  background-color: rgba(62, 136, 91, 0.1) !important;
-}
-
-.jersey-badge {
-  background-color: #1f3325;
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 0.75rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.player-header-badge {
-  width: 44px;
-  height: 44px;
-  background-color: #3e885b;
-  color: #ffffff;
-  font-weight: 900;
-  font-size: 1.15rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-}
-
-/* Barras de Zonas */
 .zone-badge {
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
 }
 
 .zone-walk { background-color: #3b82f6; }
@@ -1468,59 +1837,54 @@ const diagnosticoAtleta = computed(() => {
 
 .segmented-bar {
   display: flex;
-  height: 7px;
+  height: 10px;
   width: 100%;
-  border-radius: 3px;
+  border-radius: 6px;
   overflow: hidden;
-  background-color: #1a2a1f;
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
-.seg-walk { background-color: #3b82f6; }
-.seg-jog { background-color: #06b6d4; }
-.seg-run { background-color: #f59e0b; }
-.seg-sprint { background-color: #ef4444; }
+.seg-walk { background-color: #3b82f6; transition: width 0.4s ease; }
+.seg-jog { background-color: #06b6d4; transition: width 0.4s ease; }
+.seg-run { background-color: #f59e0b; transition: width 0.4s ease; }
+.seg-sprint { background-color: #ef4444; transition: width 0.4s ease; }
 
-/* Prancheta Tatica SVG */
+.table-custom th {
+  color: #94a3b8 !important;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+.table-custom td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Pitch & Radar Containers */
 .pitch-container {
-  background-color: #0a140d;
-  border: 1px solid #1f3325;
-  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: center;
 }
 
-.tactical-pitch-svg {
+.soccer-pitch {
   width: 100%;
-  max-height: 280px;
+  max-height: 480px;
+  border-radius: 10px;
 }
 
-/* Radar */
-.radar-box {
-  background-color: #0a140d;
-  border: 1px solid #1c2e21;
-  border-radius: 6px;
+.radar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .radar-svg {
   width: 100%;
-  max-height: 240px;
-}
-
-/* Caixa Foster */
-.foster-box {
-  background-color: #0d1611;
-  border: 1px solid #233b2a;
-  border-radius: 6px;
-}
-
-/* Parecer Clinico */
-.clinical-box {
-  background-color: #0a140d;
-  border: 1px solid #1c2e21;
-  border-radius: 6px;
-}
-
-.font-mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  max-width: 380px;
+  height: auto;
 }
 </style>
