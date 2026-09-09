@@ -3,109 +3,180 @@
     <!-- BARRA LATERAL (MENU PRINCIPAL) -->
     <v-navigation-drawer
       v-model="drawerAberto"
+      :rail="railMode"
+      :rail-width="72"
+      disable-resize-watcher
       color="#060b13"
       width="270"
       border
       elevation="4"
       class="sidebar-custom"
     >
-      <!-- Logo Oficial Visão 90 no topo da barra -->
-      <div class="sidebar-logo-container pa-4 border-b">
-        <img
-          src="/visao90-header.png"
-          alt="Visão 90"
-          class="sidebar-logo-img"
-        />
+      <!-- Header do Menu: Logo Oficial + Botões de Recolher/Fechar -->
+      <div v-if="!railMode" class="sidebar-logo-container pa-3 border-b d-flex align-center justify-space-between">
+        <div class="d-flex align-center flex-grow-1 mr-2" style="min-width: 0;">
+          <img
+            src="/visao90-header.png"
+            alt="Visão 90"
+            class="sidebar-logo-img"
+          />
+        </div>
+
+        <div class="d-flex align-center flex-shrink-0">
+          <!-- Botão Modo Compacto (Rail) -->
+          <v-tooltip text="Recolher para ícones" location="bottom">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-dock-left"
+                size="small"
+                variant="text"
+                color="grey-lighten-1"
+                @click.stop="railMode = true"
+              ></v-btn>
+            </template>
+          </v-tooltip>
+
+          <!-- Botão Esconder Menu Completamente -->
+          <v-tooltip text="Esconder menu lateral" location="bottom">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-chevron-left"
+                size="small"
+                variant="text"
+                color="grey-lighten-1"
+                @click.stop="drawerAberto = false"
+              ></v-btn>
+            </template>
+          </v-tooltip>
+        </div>
+      </div>
+
+      <!-- Header em Modo Compacto (Rail) -->
+      <div v-else class="pa-3 border-b d-flex flex-column align-center justify-center">
+        <v-tooltip text="Expandir menu lateral" location="right">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              v-bind="props"
+              icon="mdi-chevron-double-right"
+              size="small"
+              variant="tonal"
+              color="primary"
+              @click.stop="railMode = false"
+            ></v-btn>
+          </template>
+        </v-tooltip>
       </div>
 
       <!-- Menu de Navegação em 4 Módulos -->
-      <v-list density="comfortable" nav class="pa-3 mt-1">
+      <v-list density="comfortable" nav class="pa-2 mt-1">
         <!-- 1. Inserção de Dados -->
-        <v-list-item
-          value="dados"
-          :active="menuAtivo === 'dados'"
-          @click="menuAtivo = 'dados'"
-          rounded="lg"
-          class="mb-2 nav-item-custom"
-          color="secondary"
-        >
-          <template v-slot:prepend>
-            <v-icon icon="mdi-database-plus-outline" class="mr-1"></v-icon>
+        <v-tooltip text="Inserção de Dados" :disabled="!railMode" location="right">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              value="dados"
+              :active="menuAtivo === 'dados'"
+              @click="selecionarMenu('dados')"
+              rounded="lg"
+              class="mb-2 nav-item-custom"
+              color="secondary"
+            >
+              <template v-slot:prepend>
+                <v-icon icon="mdi-database-plus-outline" class="mr-1"></v-icon>
+              </template>
+              <v-list-item-title class="font-weight-bold text-body-2">
+                Inserção de Dados
+              </v-list-item-title>
+              <v-list-item-subtitle v-if="!railMode" class="text-caption text-medium-emphasis">
+                Upload CSV & Fontes 25 Hz
+              </v-list-item-subtitle>
+            </v-list-item>
           </template>
-          <v-list-item-title class="font-weight-bold text-body-2">
-            Inserção de Dados
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-caption text-medium-emphasis">
-            Upload CSV & Fontes 25 Hz
-          </v-list-item-subtitle>
-        </v-list-item>
+        </v-tooltip>
 
         <!-- 2. Partidas & Histórico -->
-        <v-list-item
-          value="partidas"
-          :active="menuAtivo === 'partidas'"
-          @click="menuAtivo = 'partidas'"
-          rounded="lg"
-          class="mb-2 nav-item-custom"
-          color="info"
-        >
-          <template v-slot:prepend>
-            <v-icon icon="mdi-calendar-sync-outline" class="mr-1"></v-icon>
+        <v-tooltip text="Partidas & Histórico" :disabled="!railMode" location="right">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              value="partidas"
+              :active="menuAtivo === 'partidas'"
+              @click="selecionarMenu('partidas')"
+              rounded="lg"
+              class="mb-2 nav-item-custom"
+              color="info"
+            >
+              <template v-slot:prepend>
+                <v-icon icon="mdi-calendar-sync-outline" class="mr-1"></v-icon>
+              </template>
+              <v-list-item-title class="font-weight-bold text-body-2">
+                Partidas & Histórico
+              </v-list-item-title>
+              <v-list-item-subtitle v-if="!railMode" class="text-caption text-medium-emphasis">
+                Comparativo entre jogos
+              </v-list-item-subtitle>
+            </v-list-item>
           </template>
-          <v-list-item-title class="font-weight-bold text-body-2">
-            Partidas & Histórico
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-caption text-medium-emphasis">
-            Comparativo entre jogos
-          </v-list-item-subtitle>
-        </v-list-item>
+        </v-tooltip>
 
         <!-- 3. Dashboard do Time -->
-        <v-list-item
-          value="time"
-          :active="menuAtivo === 'time'"
-          @click="menuAtivo = 'time'"
-          rounded="lg"
-          class="mb-2 nav-item-custom"
-          color="primary"
-        >
-          <template v-slot:prepend>
-            <v-icon icon="mdi-soccer" class="mr-1"></v-icon>
+        <v-tooltip text="Dashboard do Time" :disabled="!railMode" location="right">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              value="time"
+              :active="menuAtivo === 'time'"
+              @click="selecionarMenu('time')"
+              rounded="lg"
+              class="mb-2 nav-item-custom"
+              color="primary"
+            >
+              <template v-slot:prepend>
+                <v-icon icon="mdi-soccer" class="mr-1"></v-icon>
+              </template>
+              <v-list-item-title class="font-weight-bold text-body-2">
+                Dashboard do Time
+              </v-list-item-title>
+              <v-list-item-subtitle v-if="!railMode" class="text-caption text-medium-emphasis">
+                Visão Coletiva & Tática
+              </v-list-item-subtitle>
+            </v-list-item>
           </template>
-          <v-list-item-title class="font-weight-bold text-body-2">
-            Dashboard do Time
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-caption text-medium-emphasis">
-            Visão Coletiva & Tática
-          </v-list-item-subtitle>
-        </v-list-item>
+        </v-tooltip>
 
         <!-- 4. Dashboard do Atleta -->
-        <v-list-item
-          value="atleta"
-          :active="menuAtivo === 'atleta'"
-          @click="menuAtivo = 'atleta'"
-          rounded="lg"
-          class="mb-2 nav-item-custom"
-          color="warning"
-        >
-          <template v-slot:prepend>
-            <v-icon icon="mdi-account-details-outline" class="mr-1"></v-icon>
+        <v-tooltip text="Dashboard do Atleta" :disabled="!railMode" location="right">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              value="atleta"
+              :active="menuAtivo === 'atleta'"
+              @click="selecionarMenu('atleta')"
+              rounded="lg"
+              class="mb-2 nav-item-custom"
+              color="warning"
+            >
+              <template v-slot:prepend>
+                <v-icon icon="mdi-account-details-outline" class="mr-1"></v-icon>
+              </template>
+              <v-list-item-title class="font-weight-bold text-body-2">
+                Dashboard do Atleta
+              </v-list-item-title>
+              <v-list-item-subtitle v-if="!railMode" class="text-caption text-medium-emphasis">
+                Individual & Risco de Lesão
+              </v-list-item-subtitle>
+            </v-list-item>
           </template>
-          <v-list-item-title class="font-weight-bold text-body-2">
-            Dashboard do Atleta
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-caption text-medium-emphasis">
-            Individual & Risco de Lesão
-          </v-list-item-subtitle>
-        </v-list-item>
+        </v-tooltip>
       </v-list>
 
       <v-spacer></v-spacer>
 
       <!-- Status do Sistema no Rodapé do Menu -->
       <template v-slot:append>
-        <div class="pa-3 border-t bg-surface-darken-1">
+        <div v-if="!railMode" class="pa-3 border-t bg-surface-darken-1">
           <div class="d-flex align-center justify-space-between mb-1">
             <span class="text-caption text-medium-emphasis">Partida Ativa:</span>
             <v-chip size="x-small" color="primary" variant="flat" class="font-weight-bold">
@@ -126,16 +197,60 @@
               <span>PostgreSQL Integrado</span>
             </div>
           </div>
+
+          <!-- Botão explícito para esconder o menu no rodapé -->
+          <v-btn
+            block
+            variant="tonal"
+            size="small"
+            color="grey-lighten-2"
+            prepend-icon="mdi-chevron-left"
+            @click.stop="drawerAberto = false"
+            class="mt-3 text-caption font-weight-bold"
+          >
+            Esconder Menu
+          </v-btn>
+        </div>
+
+        <div v-else class="pa-2 border-t d-flex flex-column align-center gap-2">
+          <v-tooltip text="Esconder menu" location="right">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-chevron-left"
+                size="small"
+                variant="text"
+                color="grey-lighten-2"
+                @click.stop="drawerAberto = false"
+              ></v-btn>
+            </template>
+          </v-tooltip>
         </div>
       </template>
     </v-navigation-drawer>
 
     <!-- TOP APP BAR -->
     <v-app-bar color="#070c17" elevation="1" border="b" height="64">
-      <v-app-bar-nav-icon
-        @click="drawerAberto = !drawerAberto"
-        color="grey-lighten-1"
-      ></v-app-bar-nav-icon>
+      <v-tooltip :text="drawerAberto ? 'Esconder menu lateral' : 'Abrir menu lateral'" location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-app-bar-nav-icon
+            v-bind="props"
+            @click.stop="alternarDrawer"
+            :color="drawerAberto ? 'grey-lighten-1' : 'primary'"
+            class="mr-1"
+          ></v-app-bar-nav-icon>
+        </template>
+      </v-tooltip>
+
+      <!-- Logo Oficial Visão 90 visível quando o menu estiver escondido -->
+      <div v-if="!drawerAberto" class="d-flex align-center mr-3 pl-1">
+        <img
+          src="/visao90-header.png"
+          alt="Visão 90"
+          style="height: 32px; width: auto; object-fit: contain;"
+        />
+        <v-divider vertical class="mx-3 my-2"></v-divider>
+      </div>
 
       <div class="d-flex align-center">
         <h1 class="text-subtitle-1 text-sm-h6 font-weight-bold ml-1 mb-0">
@@ -1662,14 +1777,29 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useDisplay } from 'vuetify'
+
+const { mobile } = useDisplay()
 
 // =========================================================================
 // CONTROLE DE NAVEGAÇÃO & INTERFACE
 // =========================================================================
 const drawerAberto = ref(true)
+const railMode = ref(false)
 const menuAtivo = ref('time') // 'dados' | 'partidas' | 'time' | 'atleta'
 const partidaAtivaId = ref('1')
 const atletaAtivoId = ref('7')
+
+function alternarDrawer() {
+  drawerAberto.value = !drawerAberto.value
+}
+
+function selecionarMenu(menu) {
+  menuAtivo.value = menu
+  if (mobile.value) {
+    drawerAberto.value = false
+  }
+}
 
 // Alertas
 const mensagemAlerta = ref('')
