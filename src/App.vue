@@ -1632,6 +1632,241 @@
             </v-card>
           </v-col>
         </v-row>
+
+        <!-- 5. ANÁLISE TEMPORAL DE INTENSIDADE & PONTO DE QUEBRA DE RENDIMENTO -->
+        <v-card class="glass-card pa-4 mb-4" elevation="0" v-if="atletaAtivo">
+          <div class="d-flex flex-wrap align-center justify-space-between mb-4">
+            <div class="d-flex align-center">
+              <v-icon icon="mdi-chart-timeline-variant-shimmer" color="warning" class="mr-2" size="28"></v-icon>
+              <div>
+                <h3 class="text-subtitle-1 font-weight-bold">
+                  Dinâmica Temporal de Intensidade & Ponto de Quebra (Blocos de 15 Minutos)
+                </h3>
+                <p class="text-caption text-medium-emphasis">
+                  Monitoramento contínuo de ritmo (m/min), HSR e sprints para identificação precoce do momento exato de queda e fadiga neuromuscular.
+                </p>
+              </div>
+            </div>
+
+            <div class="d-flex align-center gap-2">
+              <v-chip
+                size="small"
+                :color="analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? 'error' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? 'warning' : 'success'"
+                variant="flat"
+                class="font-weight-bold"
+              >
+                <v-icon start :icon="analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? 'mdi-alert-octagon' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? 'mdi-alert' : 'mdi-check-decagram'"></v-icon>
+                {{ analiseTemporalAtleta.diagnosticoFadiga.tipo }}
+              </v-chip>
+              <v-chip size="small" color="secondary" variant="tonal" class="font-weight-bold">
+                Momento de Quebra: {{ analiseTemporalAtleta.momentoQuedaIntensidade }}
+              </v-chip>
+            </div>
+          </div>
+
+          <!-- GRÁFICO DE BARRAS DE INTENSIDADE POR BLOCOS DE 15' -->
+          <div class="temporal-chart-container pa-4 rounded-lg mb-4">
+            <div class="d-flex justify-space-between align-center mb-3">
+              <span class="text-caption font-weight-bold text-slate-200">
+                <v-icon icon="mdi-speedometer" size="14" class="mr-1 text-primary"></v-icon>
+                Ritmo Relativo de Jogo (m/min) por Período de 15 Minutos
+              </span>
+              <span class="text-caption text-medium-emphasis">
+                Média Geral do Atleta: <strong class="text-primary">{{ ritmoNormalizadoMmin.toFixed(1) }} m/min</strong>
+              </span>
+            </div>
+
+            <!-- Colunas do Gráfico -->
+            <div class="temporal-bars-stage d-flex align-end justify-space-between gap-2">
+              <!-- Linha de Média da Partida -->
+              <div
+                class="average-reference-line"
+                :style="{ bottom: calcularAlturaBarraTemporal(ritmoNormalizadoMmin, maiorMminTemporal) + '%' }"
+              >
+                <span class="avg-line-label">Média Geral ({{ ritmoNormalizadoMmin.toFixed(0) }} m/min)</span>
+              </div>
+
+              <!-- Barras de Cada Bloco -->
+              <div
+                v-for="bloco in analiseTemporalAtleta.blocosTemporais"
+                :key="'bloco-tmp-' + bloco.indice"
+                class="d-flex flex-column align-center flex-grow-1 h-100 justify-end"
+                style="z-index: 2; position: relative;"
+              >
+                <!-- Badges do Topo da Barra -->
+                <div class="mb-1 text-center" style="min-height: 28px;">
+                  <v-chip
+                    v-if="bloco.classificacao === 'pico'"
+                    size="x-small"
+                    color="primary"
+                    variant="flat"
+                    class="font-weight-black text-2xs px-1 mb-1"
+                  >
+                    🏆 PICO
+                  </v-chip>
+                  <v-chip
+                    v-else-if="bloco.classificacao === 'queda-severa'"
+                    size="x-small"
+                    color="error"
+                    variant="flat"
+                    class="font-weight-black text-2xs px-1 mb-1 pulse-chip"
+                  >
+                    🚨 {{ bloco.decaimentoPercentual }}%
+                  </v-chip>
+                  <v-chip
+                    v-else-if="bloco.classificacao === 'queda-moderada'"
+                    size="x-small"
+                    color="warning"
+                    variant="flat"
+                    class="font-weight-bold text-2xs px-1 mb-1"
+                  >
+                    ⚠️ {{ bloco.decaimentoPercentual }}%
+                  </v-chip>
+                  <div class="font-weight-black text-caption" :class="obterCorTextoMmin(bloco.classificacao)">
+                    {{ bloco.metrosPorMinuto > 0 ? bloco.metrosPorMinuto.toFixed(1) : '-' }}
+                  </div>
+                </div>
+
+                <!-- Barra Visual Estilizada -->
+                <div
+                  class="temporal-bar-column rounded-t"
+                  :style="{
+                    height: bloco.distanciaTotal > 0 ? calcularAlturaBarraTemporal(bloco.metrosPorMinuto, maiorMminTemporal) + '%' : '4px',
+                    background: obterGradienteBarraTemporal(bloco.classificacao)
+                  }"
+                ></div>
+
+                <!-- Rótulo do Bloco & Detalhes -->
+                <div class="text-center mt-2 w-100">
+                  <div class="font-weight-bold text-caption text-slate-200">{{ bloco.rotulo }}</div>
+                  <div class="text-3xs text-medium-emphasis">{{ bloco.distanciaTotal }}m</div>
+                  <div class="text-3xs" :class="bloco.distanciaHSR > 0 ? 'text-secondary' : 'text-slate-500'">
+                    HSR: {{ bloco.distanciaHSR }}m
+                  </div>
+                  <div class="text-3xs text-error font-weight-bold" v-if="bloco.sprintsContagem > 0">
+                    {{ bloco.sprintsContagem }} sprint{{ bloco.sprintsContagem > 1 ? 's' : '' }}
+                  </div>
+                  <div class="text-3xs text-slate-600" v-else>
+                    0 sprints
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Divisória 1º Tempo / Intervalo / 2º Tempo -->
+            <div class="d-flex justify-space-between text-caption text-medium-emphasis border-t mt-3 pt-2">
+              <span class="text-info font-weight-bold">◀ 1º TEMPO (0' a 45')</span>
+              <span class="text-amber-400 font-weight-bold">INTERVALO</span>
+              <span class="text-secondary font-weight-bold">2º TEMPO (45' a 90'+) ▶</span>
+            </div>
+          </div>
+
+          <!-- COMPARATIVO 1º TEMPO VS 2º TEMPO & ALERTA DE FADIGA -->
+          <v-row dense>
+            <!-- 1ºT vs 2ºT: Volume & Ritmo -->
+            <v-col cols="12" md="3">
+              <v-card color="surface-variant" class="pa-3 text-center h-100" elevation="0">
+                <div class="text-caption text-medium-emphasis font-weight-bold">Distância Total (1ºT vs 2ºT)</div>
+                <div class="d-flex justify-space-around align-center my-2">
+                  <div>
+                    <div class="text-caption text-slate-400">1ºT</div>
+                    <div class="text-body-1 font-weight-bold text-info">{{ analiseTemporalAtleta.analisePrimeiroTempo.distancia }}m</div>
+                  </div>
+                  <v-icon icon="mdi-arrow-right-thin" color="slate-500"></v-icon>
+                  <div>
+                    <div class="text-caption text-slate-400">2ºT</div>
+                    <div class="text-body-1 font-weight-bold text-secondary">{{ analiseTemporalAtleta.analiseSegundoTempo.distancia }}m</div>
+                  </div>
+                </div>
+                <v-chip
+                  size="x-small"
+                  :color="analiseTemporalAtleta.analiseSegundoTempo.distancia < analiseTemporalAtleta.analisePrimeiroTempo.distancia ? 'warning' : 'success'"
+                  variant="tonal"
+                  class="font-weight-bold"
+                >
+                  Δ {{ calcularDeltaPercentual(analiseTemporalAtleta.analisePrimeiroTempo.distancia, analiseTemporalAtleta.analiseSegundoTempo.distancia) }}%
+                </v-chip>
+              </v-card>
+            </v-col>
+
+            <!-- 1ºT vs 2ºT: Intensidade Relativa (m/min) -->
+            <v-col cols="12" md="3">
+              <v-card color="surface-variant" class="pa-3 text-center h-100" elevation="0">
+                <div class="text-caption text-medium-emphasis font-weight-bold">Ritmo Relativo (m/min)</div>
+                <div class="d-flex justify-space-around align-center my-2">
+                  <div>
+                    <div class="text-caption text-slate-400">1ºT</div>
+                    <div class="text-h6 font-weight-black text-info">{{ analiseTemporalAtleta.analisePrimeiroTempo.metrosPorMinuto }}</div>
+                  </div>
+                  <v-icon icon="mdi-arrow-right-thin" color="slate-500"></v-icon>
+                  <div>
+                    <div class="text-caption text-slate-400">2ºT</div>
+                    <div class="text-h6 font-weight-black text-secondary">{{ analiseTemporalAtleta.analiseSegundoTempo.metrosPorMinuto }}</div>
+                  </div>
+                </div>
+                <v-chip
+                  size="x-small"
+                  :color="analiseTemporalAtleta.decaimentoSegundoTempoPercentual <= -15 ? 'error' : analiseTemporalAtleta.decaimentoSegundoTempoPercentual <= -8 ? 'warning' : 'success'"
+                  variant="flat"
+                  class="font-weight-black"
+                >
+                  Decaimento: {{ analiseTemporalAtleta.decaimentoSegundoTempoPercentual }}%
+                </v-chip>
+              </v-card>
+            </v-col>
+
+            <!-- 1ºT vs 2ºT: Alta Intensidade (HSR + Sprints) -->
+            <v-col cols="12" md="3">
+              <v-card color="surface-variant" class="pa-3 text-center h-100" elevation="0">
+                <div class="text-caption text-medium-emphasis font-weight-bold">Alta Intensidade (HSR & Sprints)</div>
+                <div class="d-flex justify-space-around align-center my-2">
+                  <div>
+                    <div class="text-caption text-slate-400">1ºT</div>
+                    <div class="text-body-2 font-weight-bold text-secondary">{{ analiseTemporalAtleta.analisePrimeiroTempo.hsr }}m ({{ analiseTemporalAtleta.analisePrimeiroTempo.sprints }} sp)</div>
+                  </div>
+                  <v-icon icon="mdi-arrow-right-thin" color="slate-500"></v-icon>
+                  <div>
+                    <div class="text-caption text-slate-400">2ºT</div>
+                    <div class="text-body-2 font-weight-bold text-error">{{ analiseTemporalAtleta.analiseSegundoTempo.hsr }}m ({{ analiseTemporalAtleta.analiseSegundoTempo.sprints }} sp)</div>
+                  </div>
+                </div>
+                <v-chip
+                  size="x-small"
+                  :color="analiseTemporalAtleta.analiseSegundoTempo.hsr < analiseTemporalAtleta.analisePrimeiroTempo.hsr * 0.7 ? 'error' : 'warning'"
+                  variant="tonal"
+                  class="font-weight-bold"
+                >
+                  Queda HSR: {{ calcularDeltaPercentual(analiseTemporalAtleta.analisePrimeiroTempo.hsr, analiseTemporalAtleta.analiseSegundoTempo.hsr) }}%
+                </v-chip>
+              </v-card>
+            </v-col>
+
+            <!-- Parecer da Comissão Técnica -->
+            <v-col cols="12" md="3">
+              <v-card
+                :color="analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? 'rgba(239, 68, 68, 0.15)' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)'"
+                class="pa-3 h-100 d-flex flex-column justify-center border"
+                :style="{ borderColor: analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? '#ef4444' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? '#f59e0b' : '#10b981' }"
+                elevation="0"
+              >
+                <div class="d-flex align-center mb-1">
+                  <v-icon
+                    :icon="analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? 'mdi-alert-decagram' : 'mdi-information'"
+                    :color="analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? 'error' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? 'warning' : 'success'"
+                    size="18"
+                    class="mr-1"
+                  ></v-icon>
+                  <span class="text-caption font-weight-black text-slate-100">
+                    Parecer da Comissão
+                  </span>
+                </div>
+                <p class="text-caption text-slate-200 mb-0" style="line-height: 1.35; font-size: 11px !important;">
+                  {{ analiseTemporalAtleta.diagnosticoFadiga.recomendacaoComissao }}
+                </p>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-card>
       </div>
 
       <!-- ========================================================================= -->
@@ -2625,6 +2860,208 @@ const diagnosticoBorgAtleta = computed(() => {
 })
 
 // =========================================================================
+// 5. ANÁLISE TEMPORAL DE INTENSIDADE & PONTO DE QUEBRA DE FADIGA
+// =========================================================================
+function calcularCurvaTemporalFisiologica(distanciaTotal, minutos, posicao, fatorDecaimento = 1.0) {
+  const rotulos = ["0-15'", "15-30'", "30-45'", "45-60'", "60-75'", "75-90'+"];
+  const mMinMedio = minutos > 0 ? distanciaTotal / minutos : 100;
+  
+  const curvasPorPosicao = {
+    'Ponta Direita': [1.14, 1.08, 1.05, 0.97, 0.84, 0.72],
+    'Ponta Esquerda': [1.12, 1.07, 1.03, 0.96, 0.86, 0.74],
+    'Meio-Campista Central': [1.05, 1.04, 1.03, 0.99, 0.95, 0.91],
+    'Volante': [1.04, 1.03, 1.02, 0.99, 0.95, 0.92],
+    'Lateral Direito': [1.11, 1.07, 1.04, 0.97, 0.85, 0.74],
+    'Lateral Esquerdo': [1.10, 1.06, 1.03, 0.98, 0.86, 0.76],
+    'Zagueiro Central': [1.03, 1.02, 1.01, 0.99, 0.97, 0.94],
+    'Centroavante': [1.09, 1.05, 1.02, 0.97, 0.87, 0.78],
+    'Goleiro': [1.01, 1.00, 1.00, 1.00, 0.99, 0.99]
+  };
+
+  const perfil = curvasPorPosicao[posicao] || [1.08, 1.05, 1.02, 0.98, 0.88, 0.78];
+  let picoMmin = 0;
+
+  const blocosPre = rotulos.map((rotulo, idx) => {
+    const minutosEfetivosBloco = Math.min(15, Math.max(0, minutos - idx * 15));
+    if (minutosEfetivosBloco <= 0) {
+      return {
+        indice: idx,
+        rotulo,
+        tempoInicioMinutos: idx * 15,
+        tempoFimMinutos: (idx + 1) * 15,
+        distanciaTotal: 0,
+        metrosPorMinuto: 0,
+        distanciaHSR: 0,
+        distanciaSprint: 0,
+        sprintsContagem: 0,
+        velocidadeMaxima: 0,
+        aceleracoesAltas: 0,
+        decaimentoPercentual: 0,
+        classificacao: 'estavel'
+      };
+    }
+
+    const fator = perfil[idx] * (idx >= 4 ? fatorDecaimento : 1.0);
+    const mMinBloco = Math.round(mMinMedio * fator * 10) / 10;
+    if (mMinBloco > picoMmin) picoMmin = mMinBloco;
+    const distBloco = Math.round(mMinBloco * minutosEfetivosBloco);
+
+    const fatorHSR = Math.pow(fator, 2.2);
+    const distHSR = Math.round((distanciaTotal * 0.08 / 6) * fatorHSR);
+    const distSprint = Math.round((distanciaTotal * 0.03 / 6) * Math.pow(fator, 3.0));
+    const sprints = Math.max(0, Math.round(4 * Math.pow(fator, 2.5)));
+    const velMax = Math.round((29.5 + 5.0 * Math.pow(fator, 1.5)) * 10) / 10;
+
+    return {
+      indice: idx,
+      rotulo,
+      tempoInicioMinutos: idx * 15,
+      tempoFimMinutos: (idx + 1) * 15,
+      distanciaTotal: distBloco,
+      metrosPorMinuto: mMinBloco,
+      distanciaHSR: distHSR,
+      distanciaSprint: distSprint,
+      sprintsContagem: sprints,
+      velocidadeMaxima: velMax,
+      aceleracoesAltas: Math.max(1, Math.round(10 * fator)),
+      decaimentoPercentual: 0,
+      classificacao: 'estavel'
+    };
+  });
+
+  let primeiroBlocoQueda = '';
+  let maiorQueda = 0;
+
+  const blocos = blocosPre.map(b => {
+    if (b.metrosPorMinuto <= 0) return b;
+    const decaimento = picoMmin > 0 ? Math.round(((b.metrosPorMinuto - picoMmin) / picoMmin) * 1000) / 10 : 0;
+    let classificacao = 'estavel';
+    if (b.metrosPorMinuto >= picoMmin * 0.96) {
+      classificacao = 'pico';
+    } else if (decaimento >= -10) {
+      classificacao = 'estavel';
+    } else if (decaimento >= -20) {
+      classificacao = 'queda-moderada';
+      if (!primeiroBlocoQueda && b.indice > 0) primeiroBlocoQueda = b.rotulo;
+      if (Math.abs(decaimento) > maiorQueda) maiorQueda = Math.abs(decaimento);
+    } else {
+      classificacao = 'queda-severa';
+      if (!primeiroBlocoQueda && b.indice > 0) primeiroBlocoQueda = b.rotulo;
+      if (Math.abs(decaimento) > maiorQueda) maiorQueda = Math.abs(decaimento);
+    }
+    return { ...b, decaimentoPercentual: decaimento, classificacao };
+  });
+
+  const b1 = blocos.slice(0, 3).filter(b => b.distanciaTotal > 0);
+  const b2 = blocos.slice(3, 6).filter(b => b.distanciaTotal > 0);
+
+  const dist1 = b1.reduce((acc, cur) => acc + cur.distanciaTotal, 0);
+  const dist2 = b2.reduce((acc, cur) => acc + cur.distanciaTotal, 0);
+  const min1 = Math.min(45, minutos);
+  const min2 = Math.max(0, minutos - 45);
+
+  const mMin1 = min1 > 0 ? Math.round((dist1 / min1) * 10) / 10 : 0;
+  const mMin2 = min2 > 0 ? Math.round((dist2 / min2) * 10) / 10 : 0;
+  const hsr1 = b1.reduce((acc, cur) => acc + cur.distanciaHSR, 0);
+  const hsr2 = b2.reduce((acc, cur) => acc + cur.distanciaHSR, 0);
+  const sprints1 = b1.reduce((acc, cur) => acc + cur.sprintsContagem, 0);
+  const sprints2 = b2.reduce((acc, cur) => acc + cur.sprintsContagem, 0);
+
+  const decaimentoT2 = mMin1 > 0 ? Math.round(((mMin2 - mMin1) / mMin1) * 1000) / 10 : 0;
+  const momentoQueda = primeiroBlocoQueda || (decaimentoT2 < -12 ? 'No 2º Tempo' : 'Intensidade Mantida');
+
+  let tipo = 'Pacing Estável (Intensidade Homogênea)';
+  let recomendacao = 'Atleta manteve distribuição homogênea de esforço físico. Excelente capacidade de tolerância neuromuscular e pacing durante toda a partida.';
+  let gravidade = 'normal';
+
+  if (maiorQueda >= 22 || decaimentoT2 <= -20) {
+    tipo = 'Fadiga Cumulativa Severa (Queda Acentuada)';
+    recomendacao = `Queda acentuada de ${maiorQueda.toFixed(1)}% no ritmo de corrida detectada (${momentoQueda}) e drástica redução em sprints. Recomenda-se substituição prioritária por volta dos 65-70 min para preservar o bloco e evitar estiramentos musculares.`;
+    gravidade = 'critico';
+  } else if (maiorQueda >= 14 || decaimentoT2 <= -12) {
+    tipo = 'Fadiga Moderada de Final de Jogo';
+    recomendacao = `Queda de rendimento observada a partir de ${momentoQueda}. Recomenda-se monitorar hidratação, espaçamento tático e considerar substituição na faixa dos 75 min.`;
+    gravidade = 'alerta';
+  }
+
+  return {
+    blocosTemporais: blocos,
+    analisePrimeiroTempo: { distancia: dist1, metrosPorMinuto: mMin1, hsr: hsr1, sprints: sprints1 },
+    analiseSegundoTempo: { distancia: dist2, metrosPorMinuto: mMin2, hsr: hsr2, sprints: sprints2 },
+    decaimentoSegundoTempoPercentual: decaimentoT2,
+    momentoQuedaIntensidade: momentoQueda,
+    diagnosticoFadiga: {
+      tipo,
+      momentoQueda,
+      quedaPercentual: maiorQueda,
+      recomendacaoComissao: recomendacao,
+      gravidade
+    }
+  };
+}
+
+const analiseTemporalAtleta = computed(() => {
+  if (!atletaAtivo.value) {
+    return calcularCurvaTemporalFisiologica(10000, 90, 'Meio-Campista Central');
+  }
+
+  // Fator individual de fadiga por atleta (ex: Jogador 7 fadigou mais, Jogador 5 manteve)
+  let fatorIndividual = 1.0;
+  if (atletaAtivo.value.id === '7') fatorIndividual = 0.82; // Queda severa aos 60-75'
+  if (atletaAtivo.value.id === '10') fatorIndividual = 0.85; // Borg alto e cansaço precoce
+  if (atletaAtivo.value.id === '5') fatorIndividual = 0.98; // Motor estável
+
+  return calcularCurvaTemporalFisiologica(
+    atletaAtivo.value.distanciaTotal,
+    minutosJogadosAtleta.value,
+    atletaAtivo.value.posicaoSugerida,
+    fatorIndividual
+  );
+});
+
+const maiorMminTemporal = computed(() => {
+  if (!analiseTemporalAtleta.value || !analiseTemporalAtleta.value.blocosTemporais.length) return 140;
+  const max = Math.max(...analiseTemporalAtleta.value.blocosTemporais.map(b => b.metrosPorMinuto));
+  return Math.max(120, max * 1.05);
+});
+
+function calcularAlturaBarraTemporal(mMin, maxMmin) {
+  if (!mMin || !maxMmin) return 6;
+  return Math.max(6, Math.min(100, Math.round((mMin / maxMmin) * 90)));
+}
+
+function obterGradienteBarraTemporal(classificacao) {
+  switch (classificacao) {
+    case 'pico':
+      return 'linear-gradient(180deg, #38bdf8 0%, #0284c7 100%)';
+    case 'estavel':
+      return 'linear-gradient(180deg, #10b981 0%, #059669 100%)';
+    case 'queda-moderada':
+      return 'linear-gradient(180deg, #f59e0b 0%, #d97706 100%)';
+    case 'queda-severa':
+      return 'linear-gradient(180deg, #ef4444 0%, #dc2626 100%)';
+    default:
+      return 'linear-gradient(180deg, #64748b 0%, #475569 100%)';
+  }
+}
+
+function obterCorTextoMmin(classificacao) {
+  switch (classificacao) {
+    case 'pico': return 'text-info';
+    case 'estavel': return 'text-success';
+    case 'queda-moderada': return 'text-warning';
+    case 'queda-severa': return 'text-error';
+    default: return 'text-slate-300';
+  }
+}
+
+function calcularDeltaPercentual(v1, v2) {
+  if (!v1) return '0.0';
+  return (((v2 - v1) / v1) * 100).toFixed(1);
+}
+
+
+// =========================================================================
 // RADAR FÍSICO VS MÉDIA DA POSIÇÃO (6 EIXOS)
 // =========================================================================
 const eixosRadar = [
@@ -3227,4 +3664,73 @@ function carregarPartidasPadrao() {
     max-width: 100% !important;
   }
 }
+
+/* ========================================================================= */
+/* ESTILOS DO GRÁFICO TEMPORAL DE INTENSIDADE & DECAIMENTO DE RENDIMENTO      */
+/* ========================================================================= */
+.temporal-chart-container {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.temporal-bars-stage {
+  height: 200px;
+  position: relative;
+  padding-top: 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.temporal-bar-column {
+  width: 100%;
+  max-width: 72px;
+  border-radius: 6px 6px 0 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.temporal-bar-column:hover {
+  filter: brightness(1.2);
+  transform: translateY(-2px);
+}
+
+.average-reference-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-top: 2px dashed rgba(56, 189, 248, 0.6);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.avg-line-label {
+  position: absolute;
+  right: 6px;
+  top: -18px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.pulse-chip {
+  animation: pulse-danger 1.8s infinite;
+}
+
+@keyframes pulse-danger {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
 </style>
