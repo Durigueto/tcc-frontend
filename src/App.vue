@@ -230,7 +230,7 @@
     </v-navigation-drawer>
 
     <!-- TOP APP BAR -->
-    <v-app-bar color="#070c17" elevation="1" border="b" height="64">
+    <v-app-bar color="transparent" elevation="0" height="64" class="topbar-custom">
       <v-tooltip :text="drawerAberto ? 'Esconder menu lateral' : 'Abrir menu lateral'" location="bottom">
         <template v-slot:activator="{ props }">
           <v-app-bar-nav-icon
@@ -3495,125 +3495,154 @@ function carregarPartidasPadrao() {
 </script>
 
 <style scoped>
+/* ========================================================================= */
+/* VISÃO 90 - MODERN SPORTS TECH DESIGN SYSTEM (HUDL / CATAPULT PRO STYLE)   */
+/* ========================================================================= */
+
 .app-background {
-  background: radial-gradient(circle at 10% 15%, #0a1329 0%, #050811 90%) !important;
-  color: #e2e8f0;
+  background-color: #060911 !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(0, 245, 155, 0.09) 0px, transparent 45%),
+    radial-gradient(at 95% 5%, rgba(0, 229, 255, 0.08) 0px, transparent 50%),
+    radial-gradient(at 50% 60%, rgba(139, 92, 246, 0.04) 0px, transparent 65%),
+    radial-gradient(at 100% 100%, rgba(0, 245, 155, 0.06) 0px, transparent 50%) !important;
+  background-attachment: fixed !important;
+  color: #f1f5f9;
   min-height: 100vh;
+  font-family: var(--font-sans);
 }
 
 .main-viewport {
-  max-width: 1600px;
+  max-width: 1640px;
   margin: 0 auto;
   width: 100%;
 }
 
+/* ------------------------------------------------------------------------- */
+/* TOP APP BAR & HEADER TRANSLÚCIDO                                          */
+/* ------------------------------------------------------------------------- */
+.topbar-custom {
+  background: rgba(7, 11, 20, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* BARRA LATERAL (DRAWER) MODERNA COM INDICADOR NEON                         */
+/* ------------------------------------------------------------------------- */
 .sidebar-custom {
-  background: #060b13 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(6, 10, 18, 0.94) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 6px 0 30px rgba(0, 0, 0, 0.45) !important;
 }
 
 .sidebar-logo-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
 .sidebar-logo-img {
-  height: 38px;
+  height: 40px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 2px 10px rgba(0, 230, 153, 0.3));
+  filter: drop-shadow(0 0 12px rgba(0, 245, 155, 0.35));
 }
 
 .nav-item-custom {
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 1px solid transparent !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
 }
 
 .nav-item-custom:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  transform: translateX(3px);
 }
 
+.nav-item-custom.v-list-item--active {
+  background: linear-gradient(90deg, rgba(0, 245, 155, 0.16) 0%, rgba(0, 229, 255, 0.04) 100%) !important;
+  border-color: rgba(0, 245, 155, 0.35) !important;
+  box-shadow: 0 0 20px rgba(0, 245, 155, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.nav-item-custom.v-list-item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3.5px;
+  background: #00f59b;
+  box-shadow: 0 0 10px #00f59b;
+  border-radius: 0 3px 3px 0;
+}
+
+/* ------------------------------------------------------------------------- */
+/* GLASS CARDS & SUPERFÍCIES VIDRO REFINADAS                                 */
+/* ------------------------------------------------------------------------- */
 .glass-card {
-  background: rgba(14, 23, 42, 0.78) !important;
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 14px !important;
-  transition: all 0.3s ease;
+  background: rgba(13, 21, 37, 0.65) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 12px 38px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+/* KPI Stat Cards com Hover e Brilho Esportivo */
+.kpi-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .kpi-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(16, 185, 129, 0.3) !important;
+  transform: translateY(-3px) !important;
+  border-color: rgba(0, 245, 155, 0.35) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(0, 245, 155, 0.12) !important;
 }
 
-.status-indicator {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.kpi-number {
+  font-family: var(--font-mono) !important;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
 }
 
-.zone-badge {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-}
-
-.zone-walk { background-color: #3b82f6; }
-.zone-jog { background-color: #06b6d4; }
-.zone-run { background-color: #f59e0b; }
-.zone-hsr { background-color: #10b981; }
-.zone-sprint { background-color: #ef4444; }
-
-.segmented-bar {
-  display: flex;
-  height: 12px;
-  width: 100%;
-  border-radius: 6px;
-  overflow: hidden;
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-.seg-walk { background-color: #3b82f6; transition: width 0.4s ease; }
-.seg-jog { background-color: #06b6d4; transition: width 0.4s ease; }
-.seg-run { background-color: #f59e0b; transition: width 0.4s ease; }
-.seg-hsr { background-color: #10b981; transition: width 0.4s ease; }
-.seg-sprint { background-color: #ef4444; transition: width 0.4s ease; }
-
-.table-custom th {
-  color: #94a3b8 !important;
-  text-transform: uppercase;
-  font-size: 0.72rem;
-  letter-spacing: 0.05em;
-  background-color: rgba(255, 255, 255, 0.02) !important;
-}
-
-.table-custom td {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-}
-
+/* ------------------------------------------------------------------------- */
+/* CAMPO DE FUTEBOL E HEATMAP CANVAS 2D                                      */
+/* ------------------------------------------------------------------------- */
 .pitch-container {
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(3, 7, 14, 0.7);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: center;
-}
-
-.soccer-pitch {
-  width: 100%;
-  max-height: 520px;
-  border-radius: 10px;
+  box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.6);
 }
 
 .canvas-wrapper {
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #030812 !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 245, 155, 0.22) !important;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.7), 0 0 28px rgba(0, 245, 155, 0.08) !important;
   overflow: hidden;
 }
 
@@ -3621,8 +3650,7 @@ function carregarPartidasPadrao() {
   width: 100%;
   max-width: 900px;
   height: auto;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border-radius: 14px;
 }
 
 .heatmap-legend-bar {
@@ -3631,12 +3659,146 @@ function carregarPartidasPadrao() {
   height: 10px;
   border-radius: 5px;
   background: linear-gradient(to right, #0055ff, #00d4ff, #ffea00, #ff8800, #ff1100);
+  box-shadow: 0 0 8px rgba(255, 136, 0, 0.3);
+}
+
+/* ------------------------------------------------------------------------- */
+/* BARRA SEGMENTADA DAS 5 ZONAS DE VELOCIDADE                                */
+/* ------------------------------------------------------------------------- */
+.segmented-bar {
+  display: flex;
+  height: 14px;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.seg-walk { background: linear-gradient(90deg, #38bdf8, #0ea5e9); transition: width 0.4s ease; }
+.seg-jog { background: linear-gradient(90deg, #06b6d4, #0891b2); transition: width 0.4s ease; }
+.seg-run { background: linear-gradient(90deg, #fbbf24, #f59e0b); transition: width 0.4s ease; }
+.seg-hsr { background: linear-gradient(90deg, #00f59b, #059669); transition: width 0.4s ease; box-shadow: 0 0 8px rgba(0, 245, 155, 0.4); }
+.seg-sprint { background: linear-gradient(90deg, #ff3b5c, #e11d48); transition: width 0.4s ease; box-shadow: 0 0 10px rgba(255, 59, 92, 0.5); }
+
+/* ------------------------------------------------------------------------- */
+/* TABELAS MODERNAS DO PLANTEL                                               */
+/* ------------------------------------------------------------------------- */
+.table-custom {
+  background: transparent !important;
+}
+
+.table-custom th {
+  color: #94a3b8 !important;
+  font-family: var(--font-display) !important;
+  text-transform: uppercase !important;
+  font-size: 0.70rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  background-color: rgba(14, 22, 38, 0.55) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 12px 16px !important;
+}
+
+.table-custom td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  padding: 12px 16px !important;
+  font-size: 0.85rem !important;
+  transition: background 0.15s ease;
+}
+
+.table-custom tr:hover td {
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* GRÁFICO TEMPORAL DE INTENSIDADE POR BLOCOS DE 15'                          */
+/* ------------------------------------------------------------------------- */
+.temporal-chart-container {
+  background: rgba(10, 16, 30, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.075) !important;
+  border-radius: 14px !important;
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.temporal-bars-stage {
+  height: 205px;
+  position: relative;
+  padding-top: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.temporal-bar-column {
+  width: 100%;
+  max-width: 68px;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.temporal-bar-column:hover {
+  filter: brightness(1.25);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0, 245, 155, 0.35);
+}
+
+.average-reference-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-top: 2px dashed rgba(0, 229, 255, 0.55);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.avg-line-label {
+  position: absolute;
+  right: 8px;
+  top: -20px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #00e5ff;
+  background: rgba(7, 11, 22, 0.92);
+  padding: 2px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.pulse-chip {
+  animation: pulse-danger 1.8s infinite;
+}
+
+@keyframes pulse-danger {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 92, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 59, 92, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 92, 0);
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* BADGES E INDICADORES                                                      */
+/* ------------------------------------------------------------------------- */
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
 }
 
 .radar-svg {
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
   height: auto;
+  filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.4));
 }
 
 .select-partida-top :deep(.v-field__input) {
@@ -3664,73 +3826,4 @@ function carregarPartidasPadrao() {
     max-width: 100% !important;
   }
 }
-
-/* ========================================================================= */
-/* ESTILOS DO GRÁFICO TEMPORAL DE INTENSIDADE & DECAIMENTO DE RENDIMENTO      */
-/* ========================================================================= */
-.temporal-chart-container {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.temporal-bars-stage {
-  height: 200px;
-  position: relative;
-  padding-top: 30px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.temporal-bar-column {
-  width: 100%;
-  max-width: 72px;
-  border-radius: 6px 6px 0 0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-.temporal-bar-column:hover {
-  filter: brightness(1.2);
-  transform: translateY(-2px);
-}
-
-.average-reference-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  border-top: 2px dashed rgba(56, 189, 248, 0.6);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.avg-line-label {
-  position: absolute;
-  right: 6px;
-  top: -18px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #38bdf8;
-  background: rgba(15, 23, 42, 0.85);
-  padding: 1px 6px;
-  border-radius: 4px;
-  border: 1px solid rgba(56, 189, 248, 0.3);
-}
-
-.pulse-chip {
-  animation: pulse-danger 1.8s infinite;
-}
-
-@keyframes pulse-danger {
-  0% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-  }
-}
-
 </style>

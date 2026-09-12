@@ -1,11 +1,34 @@
 @import './base.css';
 
+:root {
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-primary: #00f59b;
+  --color-primary-glow: rgba(0, 245, 155, 0.25);
+  --color-secondary: #00e5ff;
+  --color-secondary-glow: rgba(0, 229, 255, 0.25);
+  --color-warning: #fbbf24;
+  --color-error: #ff3b5c;
+
+  --bg-space: #070b14;
+  --glass-bg: rgba(14, 22, 38, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.04);
+}
+
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
-  background-color: #0b1320;
+  min-height: 100%;
+  background-color: var(--bg-space);
+  color: #f1f5f9;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 #app {
@@ -13,4 +36,44 @@ html, body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  font-family: var(--font-sans);
 }
+
+/* Tipografia Especializada */
+h1, h2, h3, .text-h4, .text-h5, .text-h6 {
+  font-family: var(--font-display) !important;
+  letter-spacing: -0.02em;
+}
+
+.mono-numeric {
+  font-family: var(--font-mono) !important;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Scrollbar Ultra Fina e Elegante */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(7, 11, 20, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 245, 155, 0.4);
+}
+
+/* Seleção de Texto */
+::selection {
+  background: rgba(0, 245, 155, 0.3);
+  color: #ffffff;
+}
+
