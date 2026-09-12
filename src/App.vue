@@ -107,7 +107,7 @@
           color="secondary"
         >
           <template v-slot:prepend>
-            <v-icon icon="mdi-file-document-chart-outline" class="mr-2" color="secondary"></v-icon>
+            <v-icon icon="mdi-file-chart-outline" class="mr-2" color="secondary"></v-icon>
           </template>
           <v-list-item-title class="font-weight-bold text-body-2">
             Relatório Pós-Jogo
@@ -407,7 +407,7 @@
               color="info"
               variant="flat"
               size="small"
-              prepend-icon="mdi-file-document-chart"
+              prepend-icon="mdi-file-chart-outline"
               @click="menuAtivo = 'relatorio'"
               class="font-weight-bold"
             >
@@ -1073,7 +1073,7 @@
             <v-btn
               color="info"
               variant="flat"
-              prepend-icon="mdi-file-document-chart"
+              prepend-icon="mdi-file-chart-outline"
               @click="menuAtivo = 'relatorio'"
               class="font-weight-bold"
             >
