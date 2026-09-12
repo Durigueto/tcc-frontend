@@ -5,17 +5,23 @@
   --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --color-primary: #00f59b;
-  --color-primary-glow: rgba(0, 245, 155, 0.25);
-  --color-secondary: #00e5ff;
-  --color-secondary-glow: rgba(0, 229, 255, 0.25);
-  --color-warning: #fbbf24;
-  --color-error: #ff3b5c;
+  /* Paleta Oficial Requisitada */
+  --color-navy: #101820;          /* Navy profundo — fundo principal */
+  --color-slate: #1B2530;         /* Slate — cards e painéis */
+  --color-teal: #2E6B66;          /* Verde petróleo/teal — botões e elementos principais */
+  --color-slate-blue: #4F6E80;    /* Azul ardósia — gráficos e informações secundárias */
+  --color-gold: #B38C40;          /* Dourado queimado — destaques importantes */
+  --color-ivory: #E8E6DF;         /* Marfim — textos */
 
-  --bg-space: #070b14;
-  --glass-bg: rgba(14, 22, 38, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-highlight: rgba(255, 255, 255, 0.04);
+  --color-primary: var(--color-teal);
+  --color-secondary: var(--color-slate-blue);
+  --color-accent: var(--color-gold);
+  --color-text: var(--color-ivory);
+  --color-bg: var(--color-navy);
+  --color-card: var(--color-slate);
+
+  --color-primary-glow: rgba(46, 107, 102, 0.35);
+  --color-gold-glow: rgba(179, 140, 64, 0.35);
 }
 
 html, body {
@@ -23,8 +29,8 @@ html, body {
   padding: 0;
   width: 100%;
   min-height: 100%;
-  background-color: var(--bg-space);
-  color: #f1f5f9;
+  background-color: var(--color-navy);
+  color: var(--color-ivory);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -37,6 +43,8 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
+  background-color: var(--color-navy);
+  color: var(--color-ivory);
 }
 
 /* Tipografia Especializada */
