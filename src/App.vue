@@ -230,7 +230,14 @@
                   <v-icon icon="mdi-file-upload-outline" color="primary"></v-icon>
                 </v-avatar>
                 <div>
-                  <h2 class="text-h6 font-weight-bold">Importação de Arquivo CSV de Rastreamento</h2>
+                  <div class="d-flex align-center">
+                    <h2 class="text-h6 font-weight-bold">Importação de Arquivo CSV de Rastreamento</h2>
+                    <v-tooltip text="Permite o envio do arquivo CSV oficial contendo séries temporais de coordenadas (X, Y) dos atletas para processamento cinemático." location="top" max-width="320">
+                      <template v-slot:activator="{ props }">
+                        <v-icon v-bind="props" icon="mdi-help-circle-outline" size="18" class="ml-2 hint-icon"></v-icon>
+                      </template>
+                    </v-tooltip>
+                  </div>
                   <p class="text-caption text-medium-emphasis">
                     Envie o arquivo CSV oficial com coordenadas de rastreamento para processamento cinemático completo.
                   </p>
@@ -281,7 +288,12 @@
             <v-card class="glass-card pa-4 mb-4" elevation="0">
               <h3 class="text-subtitle-1 font-weight-bold d-flex align-center mb-2">
                 <v-icon icon="mdi-information-outline" color="primary" class="mr-2"></v-icon>
-                Requisitos do Arquivo CSV
+                <span>Requisitos do Arquivo CSV</span>
+                <v-tooltip text="Diretrizes técnicas exigidas: coordenadas espaciais normalizadas, amostragem a 25 Hz e identificação dos atletas nas colunas." location="top" max-width="320">
+                  <template v-slot:activator="{ props }">
+                    <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                  </template>
+                </v-tooltip>
               </h3>
               <ul class="text-caption text-medium-emphasis pl-4 d-flex flex-column gap-2">
                 <li><strong>Estrutura Temporal:</strong> Coordenadas bidimensionais (X, Y) amostradas temporalmente por frame.</li>
@@ -294,7 +306,12 @@
             <v-card class="glass-card pa-4" elevation="0">
               <h3 class="text-subtitle-1 font-weight-bold d-flex align-center mb-2">
                 <v-icon icon="mdi-lightning-bolt" color="warning" class="mr-2"></v-icon>
-                Confrontos Carregados
+                <span>Confrontos Carregados</span>
+                <v-tooltip text="Exibe quantas partidas já foram processadas e estão prontas para análise, com botão para recarregar a demonstração." location="top" max-width="320">
+                  <template v-slot:activator="{ props }">
+                    <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                  </template>
+                </v-tooltip>
               </h3>
               <p class="text-caption text-medium-emphasis mb-3">
                 {{ partidas.length }} partidas oficiais cadastradas e prontas para análise da comissão.
@@ -319,6 +336,11 @@
             <div class="d-flex align-center">
               <v-icon icon="mdi-format-list-bulleted" color="primary" class="mr-2"></v-icon>
               <h3 class="text-subtitle-1 font-weight-bold">Banco de Partidas Cadastradas</h3>
+              <v-tooltip text="Histórico comparativo de todos os confrontos armazenados, permitindo alternar a partida ativa e comparar os volumes coletivos." location="top" max-width="320">
+                <template v-slot:activator="{ props }">
+                  <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                </template>
+              </v-tooltip>
             </div>
             <v-chip color="primary" size="small" variant="flat" class="font-weight-bold">
               {{ partidas.length }} Partidas
@@ -422,8 +444,13 @@
           <v-col cols="12" sm="6" md="3">
             <v-card class="glass-card pa-3 border-l-4 border-success" elevation="0">
               <div class="d-flex align-center justify-space-between">
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
-                  Faixa Ótima (Sweet Spot)
+                <div class="d-flex align-center text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                  <span>Faixa Ótima (Sweet Spot)</span>
+                  <v-tooltip text="Atletas com ACWR entre 0.8 e 1.3: zona de menor risco epidemiológico de lesão, com equilíbrio ideal entre aptidão e fadiga." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
                 <v-icon icon="mdi-shield-check" color="success"></v-icon>
               </div>
@@ -441,8 +468,13 @@
           <v-col cols="12" sm="6" md="3">
             <v-card class="glass-card pa-3 border-l-4 border-warning" elevation="0">
               <div class="d-flex align-center justify-space-between">
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
-                  Sobrecarga Moderada
+                <div class="d-flex align-center text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                  <span>Sobrecarga Moderada</span>
+                  <v-tooltip text="Atletas com ACWR entre 1.3 e 1.5: sinal de fadiga residual acumulada; recomenda-se modulação de treino e recuperação ativa." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
                 <v-icon icon="mdi-alert-circle-outline" color="warning"></v-icon>
               </div>
@@ -460,8 +492,13 @@
           <v-col cols="12" sm="6" md="3">
             <v-card class="glass-card pa-3 border-l-4 border-error" elevation="0">
               <div class="d-flex align-center justify-space-between">
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
-                  Zona de Perigo (Spike)
+                <div class="d-flex align-center text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                  <span>Zona de Perigo (Spike)</span>
+                  <v-tooltip text="Atletas com ACWR ≥ 1.5: pico excessivo de carga aguda sobre o lastro crônico; risco de lesão aumentado em até 4 a 5 vezes." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
                 <v-icon icon="mdi-alert-octagon" color="error"></v-icon>
               </div>
@@ -479,8 +516,13 @@
           <v-col cols="12" sm="6" md="3">
             <v-card class="glass-card pa-3 border-l-4 border-info" elevation="0">
               <div class="d-flex align-center justify-space-between">
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">
-                  Sub-treinamento
+                <div class="d-flex align-center text-caption text-medium-emphasis text-uppercase font-weight-bold">
+                  <span>Sub-treinamento</span>
+                  <v-tooltip text="Atletas com ACWR < 0.8: carga crônica baixa; risco de estresse lesivo caso submetidos repentinamente a alta minutagem." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
                 <v-icon icon="mdi-arrow-down-bold-circle-outline" color="info"></v-icon>
               </div>
@@ -500,6 +542,11 @@
           <div class="d-flex align-center mb-3">
             <v-icon icon="mdi-bell-ring-outline" color="warning" class="mr-2"></v-icon>
             <h3 class="text-subtitle-1 font-weight-bold">Alertas Fisiológicos Automatizados da Comissão Técnica</h3>
+            <v-tooltip text="Notificações em tempo real geradas pelo algoritmo ao identificar picos de ACWR ou anomalia fisiológica de PSE incompatível com o ritmo." location="top" max-width="320">
+              <template v-slot:activator="{ props }">
+                <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+              </template>
+            </v-tooltip>
           </div>
           <v-row dense>
             <v-col
@@ -534,7 +581,14 @@
           <v-col cols="12" sm="6" md="4" lg="2">
             <v-card class="glass-card kpi-card" elevation="0">
               <v-card-item>
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Volume Coletivo</div>
+                <div class="d-flex align-center justify-space-between">
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Volume Coletivo</div>
+                  <v-tooltip text="Distância física total somada percorrida por todos os atletas da equipe no confronto (em km)." location="top" max-width="300">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <div class="text-h4 font-weight-black mt-1 text-secondary">
                   {{ (distanciaColetivaKm).toFixed(1) }} <span class="text-caption">km</span>
                 </div>
@@ -548,7 +602,14 @@
           <v-col cols="12" sm="6" md="4" lg="2">
             <v-card class="glass-card kpi-card" elevation="0">
               <v-card-item>
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Ritmo Médio</div>
+                <div class="d-flex align-center justify-space-between">
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Ritmo Médio</div>
+                  <v-tooltip text="Intensidade física média contínua da equipe em metros percorridos por minuto jogado (m/min)." location="top" max-width="300">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <div class="text-h4 font-weight-black mt-1 text-info">
                   {{ mediaMetrosPorMinuto.toFixed(0) }} <span class="text-caption">m/min</span>
                 </div>
@@ -560,7 +621,14 @@
           <v-col cols="12" sm="6" md="4" lg="2">
             <v-card class="glass-card kpi-card" elevation="0">
               <v-card-item>
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Pico de Velocidade</div>
+                <div class="d-flex align-center justify-space-between">
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Pico Velocidade</div>
+                  <v-tooltip text="Maior velocidade máxima absoluta registrada por um jogador do elenco na partida (em km/h)." location="top" max-width="300">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <div class="text-h4 font-weight-black mt-1 text-warning">
                   {{ maiorVelocidade.toFixed(1) }} <span class="text-caption">km/h</span>
                 </div>
@@ -574,7 +642,14 @@
           <v-col cols="12" sm="6" md="4" lg="2">
             <v-card class="glass-card kpi-card" elevation="0">
               <v-card-item>
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Sprints (&gt; 25.2 km/h)</div>
+                <div class="d-flex align-center justify-space-between">
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Sprints (&gt; 25.2)</div>
+                  <v-tooltip text="Total de tiros explosivos em potência máxima (Zona 5 > 25.2 km/h) executados pelo time." location="top" max-width="300">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <div class="text-h4 font-weight-black mt-1 text-success">
                   {{ totalSprintsPicos }}
                 </div>
@@ -586,7 +661,14 @@
           <v-col cols="12" sm="6" md="4" lg="2">
             <v-card class="glass-card kpi-card" elevation="0">
               <v-card-item>
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">HSR (19.8-25.2 km/h)</div>
+                <div class="d-flex align-center justify-space-between">
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">HSR (19.8-25.2)</div>
+                  <v-tooltip text="Volume somado da equipe em corridas de alta velocidade entre 19.8 e 25.2 km/h (High-Speed Running)." location="top" max-width="300">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <div class="text-h4 font-weight-black mt-1 text-secondary">
                   {{ (totalHSRMetros / 1000).toFixed(2) }} <span class="text-caption">km</span>
                 </div>
@@ -598,7 +680,14 @@
           <v-col cols="12" sm="6" md="4" lg="2">
             <v-card class="glass-card kpi-card" elevation="0">
               <v-card-item>
-                <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Frenagens (&lt; -2.5)</div>
+                <div class="d-flex align-center justify-space-between">
+                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Frenagens (&lt; -2.5)</div>
+                  <v-tooltip text="Total de desacelerações bruscas (≤ -2.5 m/s²), maior fonte de sobrecarga mecânica excêntrica nos isquiotibiais." location="top" max-width="300">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <div class="text-h4 font-weight-black mt-1 text-error">
                   {{ totalDesaceleracoesAltas }}
                 </div>
@@ -614,6 +703,11 @@
             <div class="d-flex align-center">
               <v-icon icon="mdi-trophy-outline" color="warning" class="mr-2"></v-icon>
               <h3 class="text-subtitle-1 font-weight-bold">Quadro Comparativo & Ranqueamento do Elenco</h3>
+              <v-tooltip text="Tabela ranqueada com os 11 atletas da partida: compare distância, ritmo (m/min), sprints, escore PSE e semáforo ACWR." location="top" max-width="320">
+                <template v-slot:activator="{ props }">
+                  <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                </template>
+              </v-tooltip>
             </div>
             <div class="d-flex align-center gap-2">
               <span class="text-caption text-medium-emphasis">Ordenar por:</span>
@@ -729,9 +823,16 @@
                 <div class="d-flex align-center">
                   <v-icon icon="mdi-soccer-field" color="primary" class="mr-2"></v-icon>
                   <div>
-                    <h3 class="text-subtitle-1 font-weight-bold">
-                      Formação Tática Oficial & Ocupação Espacial (11 Atletas)
-                    </h3>
+                    <div class="d-flex align-center">
+                      <h3 class="text-subtitle-1 font-weight-bold">
+                        Formação Tática Oficial & Ocupação Espacial (11 Atletas)
+                      </h3>
+                      <v-tooltip text="Posicionamento médio simultâneo dos 11 jogadores no gramado FIFA (105x68m), exibindo o baricentro, compacidade em metros e o polígono tático envolvente." location="top" max-width="320">
+                        <template v-slot:activator="{ props }">
+                          <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                        </template>
+                      </v-tooltip>
+                    </div>
                     <p class="text-caption text-medium-emphasis">
                       Gramado Oficial 105m &times; 68m com posições médias simultâneas
                     </p>
@@ -894,6 +995,11 @@
               <div class="d-flex align-center mb-3">
                 <v-icon icon="mdi-compass-outline" color="info" class="mr-2"></v-icon>
                 <h3 class="text-subtitle-1 font-weight-bold">Dimensões do Bloco Tático da Equipe</h3>
+                <v-tooltip text="Métricas espaciais coletivas: raio de compacidade, baricentro médio, comprimento gol-a-gol e largura de amplitude lateral." location="top" max-width="320">
+                  <template v-slot:activator="{ props }">
+                    <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                  </template>
+                </v-tooltip>
               </div>
 
               <v-row dense class="mb-2">
@@ -936,6 +1042,11 @@
                 <div class="d-flex align-center">
                   <v-icon icon="mdi-speedometer" color="warning" class="mr-2"></v-icon>
                   <h3 class="text-subtitle-1 font-weight-bold">Distribuição das 5 Zonas de Velocidade</h3>
+                  <v-tooltip text="Proporção percentual da quilometragem total do time dividida entre Caminhada (Z1), Trote (Z2), Corrida (Z3), HSR (Z4) e Sprint Máximo (Z5)." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
               </div>
 
@@ -1051,6 +1162,11 @@
               <div>
                 <div class="d-flex align-center gap-2">
                   <h2 class="text-h5 font-weight-bold">Jogador #{{ atletaAtivo.id }}</h2>
+                  <v-tooltip text="Ficha detalhada do jogador: dados antropométricos, posição tática inferida e escore epidemiológico ACWR para prevenção de lesões." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="18" class="hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                   <v-chip size="small" color="secondary" variant="flat" class="font-weight-bold">
                     {{ atletaAtivo.posicaoSugerida }}
                   </v-chip>
@@ -1088,7 +1204,14 @@
             <div class="d-flex align-center">
               <v-icon icon="mdi-timer-sand" color="secondary" class="mr-2"></v-icon>
               <div>
-                <h3 class="text-subtitle-1 font-weight-bold">Minutos Jogados pelo Atleta nesta Partida</h3>
+                <div class="d-flex align-center">
+                  <h3 class="text-subtitle-1 font-weight-bold">Minutos Jogados pelo Atleta nesta Partida</h3>
+                  <v-tooltip text="Minutagem real de participação em campo; essencial para normalizar o ritmo (m/min) e computar a Carga Interna de Foster." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <p class="text-caption text-medium-emphasis">
                   Tempo real de participação em campo para normalização fidedigna dos índices de m/min e carga de Foster.
                 </p>
@@ -1148,9 +1271,16 @@
             <div class="d-flex align-center">
               <v-icon icon="mdi-heart-pulse" color="error" class="mr-2"></v-icon>
               <div>
-                <h3 class="text-subtitle-1 font-weight-bold">
-                  Coleta da Percepção Subjetiva de Esforço (PSE / Escala Borg CR-10)
-                </h3>
+                <div class="d-flex align-center">
+                  <h3 class="text-subtitle-1 font-weight-bold">
+                    Coleta da Percepção Subjetiva de Esforço (PSE / Escala Borg CR-10)
+                  </h3>
+                  <v-tooltip text="Coleta pós-jogo (20-30 min) do esforço biológico percebido pelo atleta de 0 (repouso) a 10 (máximo) para cálculo da Carga Interna de Foster." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <p class="text-caption text-medium-emphasis">
                   Coleta padronizada pós-atividade (20 a 30 min pós-jogo) para cálculo da Carga Interna (Método Foster).
                 </p>
@@ -1221,6 +1351,11 @@
                 <div class="d-flex align-center">
                   <v-icon icon="mdi-scale-balance" color="secondary" class="mr-2"></v-icon>
                   <h3 class="text-subtitle-1 font-weight-bold">Razão de Eficiência / Custo Fisiológico</h3>
+                  <v-tooltip text="Compara o trabalho mecânico externo entregue (m/min) versus o desgaste fisiológico percebido (PSE), identificando economia de esforço ou estresse precoce." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
                 <v-chip size="small" color="secondary" variant="flat" class="font-weight-bold">
                   {{ razaoEficienciaTotal }} m / U.A.
@@ -1267,6 +1402,11 @@
                 <div class="d-flex align-center">
                   <v-icon icon="mdi-chart-bell-curve" color="primary" class="mr-2"></v-icon>
                   <h3 class="text-subtitle-1 font-weight-bold">Monitoramento de Sobrecarga (ACWR & Strain)</h3>
+                  <v-tooltip text="Relação entre carga aguda (7 dias) e crônica (28 dias), complementada pela monotonia de treino e tensão semanal (Strain de Foster)." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
                 <v-chip
                   size="small"
@@ -1332,6 +1472,11 @@
                 <div class="d-flex align-center">
                   <v-icon icon="mdi-speedometer" color="warning" class="mr-2"></v-icon>
                   <h3 class="text-subtitle-1 font-weight-bold">5 Zonas de Velocidade do Atleta</h3>
+                  <v-tooltip text="Estratificação da distância percorrida nas 5 zonas metabólicas padrão (Z1 Caminhada a Z5 Sprint Máximo), com percentuais relativos e contagem de picos de arrancada." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
                 <v-chip size="small" color="primary" variant="flat" class="font-weight-bold">
                   Pico: {{ atletaAtivo.velocidadeMaxima }} km/h
@@ -1396,6 +1541,11 @@
                   <h3 class="text-subtitle-1 font-weight-bold">
                     Radar: Atleta #{{ atletaAtivo.id }} vs Média da Posição ({{ atletaAtivo.posicaoSugerida }})
                   </h3>
+                  <v-tooltip text="Gráfico radar comparando o perfil individual do atleta em 6 eixos normalizados (Distância, Ritmo, Velocidade Máxima, Sprints, HSR e Desacelerações) contra a média do elenco na mesma posição tática." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
               </div>
 
@@ -1489,9 +1639,16 @@
             <div class="d-flex align-center">
               <v-icon icon="mdi-chart-timeline-variant-shimmer" color="warning" class="mr-2" size="28"></v-icon>
               <div>
-                <h3 class="text-subtitle-1 font-weight-bold">
-                  Dinâmica Temporal de Intensidade & Ponto de Quebra (Blocos de 15 Minutos)
-                </h3>
+                <div class="d-flex align-center">
+                  <h3 class="text-subtitle-1 font-weight-bold">
+                    Dinâmica Temporal de Intensidade & Ponto de Quebra (Blocos de 15 Minutos)
+                  </h3>
+                  <v-tooltip text="Monitoramento contínuo em 6 blocos de 15 minutos (1º e 2º tempos). Diagnostica a queda de intensidade mecânica (m/min e HSR) e o momento exato de fadiga neuromuscular para orientar substituições." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <p class="text-caption text-medium-emphasis">
                   Monitoramento contínuo de ritmo (m/min), HSR e sprints para identificação precoce do momento exato de queda e fadiga neuromuscular.
                 </p>
@@ -1616,7 +1773,14 @@
             <!-- 1ºT vs 2ºT: Volume & Ritmo -->
             <v-col cols="12" md="3">
               <v-card color="surface-variant" class="pa-3 text-center h-100" elevation="0">
-                <div class="text-caption text-medium-emphasis font-weight-bold">Distância Total (1ºT vs 2ºT)</div>
+                <div class="text-caption text-medium-emphasis font-weight-bold d-flex align-center justify-center">
+                  Distância Total (1ºT vs 2ºT)
+                  <v-tooltip text="Comparativo da distância total percorrida entre o 1º e o 2º tempo, calculando a variação percentual (Δ%)." location="top" max-width="260">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <div class="d-flex justify-space-around align-center my-2">
                   <div>
                     <div class="text-caption text-slate-400">1ºT</div>
@@ -1642,7 +1806,14 @@
             <!-- 1ºT vs 2ºT: Intensidade Relativa (m/min) -->
             <v-col cols="12" md="3">
               <v-card color="surface-variant" class="pa-3 text-center h-100" elevation="0">
-                <div class="text-caption text-medium-emphasis font-weight-bold">Ritmo Relativo (m/min)</div>
+                <div class="text-caption text-medium-emphasis font-weight-bold d-flex align-center justify-center">
+                  Ritmo Relativo (m/min)
+                  <v-tooltip text="Taxa de trabalho relativa em metros por minuto. Queda acentuada no 2º tempo indica fadiga física." location="top" max-width="260">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <div class="d-flex justify-space-around align-center my-2">
                   <div>
                     <div class="text-caption text-slate-400">1ºT</div>
@@ -1668,7 +1839,14 @@
             <!-- 1ºT vs 2ºT: Alta Intensidade (HSR + Sprints) -->
             <v-col cols="12" md="3">
               <v-card color="surface-variant" class="pa-3 text-center h-100" elevation="0">
-                <div class="text-caption text-medium-emphasis font-weight-bold">Alta Intensidade (HSR & Sprints)</div>
+                <div class="text-caption text-medium-emphasis font-weight-bold d-flex align-center justify-center">
+                  Alta Intensidade (HSR & Sprints)
+                  <v-tooltip text="Distância percorrida em velocidade superior a 19.8 km/h e contagem de picos de velocidade máxima (> 25.2 km/h)." location="top" max-width="260">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <div class="d-flex justify-space-around align-center my-2">
                   <div>
                     <div class="text-caption text-slate-400">1ºT</div>
@@ -1709,6 +1887,11 @@
                   <span class="text-caption font-weight-black text-slate-100">
                     Parecer da Comissão
                   </span>
+                  <v-tooltip text="Diagnóstico automático do impacto do desgaste físico sobre o rendimento, indicando orientação tática de substituição ou modulação de carga." location="top" max-width="260">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
                 </div>
                 <p class="text-caption text-slate-200 mb-0" style="line-height: 1.35; font-size: 11px !important;">
                   {{ analiseTemporalAtleta.diagnosticoFadiga.recomendacaoComissao }}
@@ -1730,6 +1913,11 @@
               <div class="d-flex align-center gap-2">
                 <v-icon icon="mdi-file-certificate-outline" color="info" size="28"></v-icon>
                 <h2 class="text-h5 font-weight-bold">Dossiê Consolidado Pós-Jogo</h2>
+                <v-tooltip text="Laudo técnico executivo pós-jogo integrando métricas cinemáticas, mapa de calor e carga interna do atleta selecionado, otimizado para exportação e impressão em PDF." location="top" max-width="320">
+                  <template v-slot:activator="{ props }">
+                    <v-icon v-bind="props" icon="mdi-help-circle-outline" size="18" class="hint-icon"></v-icon>
+                  </template>
+                </v-tooltip>
                 <v-chip size="small" color="primary" variant="flat" class="font-weight-bold">
                   {{ partidaAtiva.placar }}
                 </v-chip>
@@ -1773,9 +1961,16 @@
             <div class="d-flex align-center">
               <v-icon icon="mdi-fire" color="error" class="mr-2"></v-icon>
               <div>
-                <h3 class="text-subtitle-1 font-weight-bold">
-                  Mapa de Calor Térmico & Trajetórias Vetoriais de Ação (105m &times; 68m)
-                </h3>
+                <div class="d-flex align-center">
+                  <h3 class="text-subtitle-1 font-weight-bold">
+                    Mapa de Calor Térmico & Trajetórias Vetoriais de Ação (105m &times; 68m)
+                  </h3>
+                  <v-tooltip text="Interpolação contínua 2D (Kernel Density Estimation) de todas as coordenadas espaciais rastreadas a 25 Hz no campo oficial (105x68m), combinada a vetores de deslocamento dos picos de sprint (> 25.2 km/h)." location="top" max-width="320">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
                 <p class="text-caption text-medium-emphasis">
                   Densidade contínua de ocupação e vetores de sprint com velocidade de pico sobre o gramado oficial.
                 </p>
@@ -1844,6 +2039,11 @@
             <h3 class="text-subtitle-1 font-weight-bold">
               Síntese Executiva de Carga: Atleta #{{ atletaAtivo.id }} ({{ atletaAtivo.posicaoSugerida }})
             </h3>
+            <v-tooltip text="Quadro consolidado de auditoria física categorizado por Carga Externa (distâncias e velocidades), Dinâmica Inercial (sprints e frenagens) e Carga Interna (Borg, Strain e ACWR), com pareceres da comissão." location="top" max-width="320">
+              <template v-slot:activator="{ props }">
+                <v-icon v-bind="props" icon="mdi-help-circle-outline" size="16" class="ml-2 hint-icon"></v-icon>
+              </template>
+            </v-tooltip>
           </div>
 
           <v-table class="bg-transparent table-custom">
@@ -3629,8 +3829,22 @@ function carregarPartidasPadrao() {
 }
 
 /* ------------------------------------------------------------------------- */
-/* BADGES E INDICADORES                                                      */
+/* BADGES, HINTS E INDICADORES                                               */
 /* ------------------------------------------------------------------------- */
+.hint-icon {
+  opacity: 0.65;
+  color: #B38C40 !important; /* Dourado queimado */
+  transition: all 0.2s ease;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.hint-icon:hover {
+  opacity: 1;
+  color: #E8E6DF !important; /* Marfim */
+  transform: scale(1.2);
+}
+
 .status-indicator {
   display: inline-block;
   width: 10px;
