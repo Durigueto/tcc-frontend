@@ -3,17 +3,15 @@
     <!-- BARRA LATERAL (MENU PRINCIPAL) -->
     <v-navigation-drawer
       v-model="drawerAberto"
-      :rail="railMode"
-      :rail-width="72"
       disable-resize-watcher
-      color="#060b13"
+      color="#0E151D"
       width="270"
       border
       elevation="4"
       class="sidebar-custom"
     >
-      <!-- Header do Menu: Logo Oficial + Botões de Recolher/Fechar -->
-      <div v-if="!railMode" class="sidebar-logo-container pa-3 border-b d-flex align-center justify-space-between">
+      <!-- Header do Menu: Logo Oficial + Único Botão de Recolher (Setinha <) -->
+      <div class="sidebar-logo-container pa-3 border-b d-flex align-center justify-space-between">
         <div class="d-flex align-center flex-grow-1 mr-2" style="min-width: 0;">
           <img
             src="/visao90-header.png"
@@ -22,48 +20,16 @@
           />
         </div>
 
-        <div class="d-flex align-center flex-shrink-0">
-          <!-- Botão Modo Compacto (Rail) -->
-          <v-tooltip text="Recolher para ícones" location="bottom">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon="mdi-dock-left"
-                size="small"
-                variant="text"
-                color="grey-lighten-1"
-                @click.stop="railMode = true"
-              ></v-btn>
-            </template>
-          </v-tooltip>
-
-          <!-- Botão Esconder Menu Completamente -->
-          <v-tooltip text="Esconder menu lateral" location="bottom">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon="mdi-chevron-left"
-                size="small"
-                variant="text"
-                color="grey-lighten-1"
-                @click.stop="drawerAberto = false"
-              ></v-btn>
-            </template>
-          </v-tooltip>
-        </div>
-      </div>
-
-      <!-- Header em Modo Compacto (Rail) -->
-      <div v-else class="pa-3 border-b d-flex flex-column align-center justify-center">
-        <v-tooltip text="Expandir menu lateral" location="right">
+        <!-- Único Botão de Esconder o Menu: Setinha < -->
+        <v-tooltip text="Esconder menu lateral" location="bottom">
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
-              icon="mdi-chevron-double-right"
+              icon="mdi-chevron-left"
               size="small"
-              variant="tonal"
-              color="primary"
-              @click.stop="railMode = false"
+              variant="text"
+              color="grey-lighten-1"
+              @click.stop="drawerAberto = false"
             ></v-btn>
           </template>
         </v-tooltip>
@@ -72,111 +38,91 @@
       <!-- Menu de Navegação em 4 Módulos Especializados do TCC -->
       <v-list density="comfortable" nav class="pa-2 mt-1">
         <!-- 1. Inserção de Dados -->
-        <v-tooltip text="Inserção de Dados & Arquivos" :disabled="!railMode" location="right">
-          <template v-slot:activator="{ props }">
-            <v-list-item
-              v-bind="props"
-              value="dados"
-              :active="menuAtivo === 'dados'"
-              @click="selecionarMenu('dados')"
-              rounded="lg"
-              class="mb-2 nav-item-custom"
-              color="secondary"
-            >
-              <template v-slot:prepend>
-                <v-icon icon="mdi-database-plus-outline" class="mr-1"></v-icon>
-              </template>
-              <v-list-item-title class="font-weight-bold text-body-2">
-                Inserção de Dados
-              </v-list-item-title>
-              <v-list-item-subtitle v-if="!railMode" class="text-caption text-medium-emphasis">
-                Upload CSV & Fontes 25 Hz
-              </v-list-item-subtitle>
-            </v-list-item>
+        <v-list-item
+          value="dados"
+          :active="menuAtivo === 'dados'"
+          @click="selecionarMenu('dados')"
+          rounded="lg"
+          class="mb-2 nav-item-custom"
+          color="primary"
+        >
+          <template v-slot:prepend>
+            <v-icon icon="mdi-database-plus-outline" class="mr-2" color="primary"></v-icon>
           </template>
-        </v-tooltip>
+          <v-list-item-title class="font-weight-bold text-body-2">
+            Inserção de Dados
+          </v-list-item-title>
+          <v-list-item-subtitle class="text-caption text-medium-emphasis">
+            Upload CSV de Rastreamento
+          </v-list-item-subtitle>
+        </v-list-item>
 
         <!-- 2. Painel da Comissão Técnica -->
-        <v-tooltip text="Painel da Comissão Técnica (ACWR & Elenco)" :disabled="!railMode" location="right">
-          <template v-slot:activator="{ props }">
-            <v-list-item
-              v-bind="props"
-              value="comissao"
-              :active="menuAtivo === 'comissao'"
-              @click="selecionarMenu('comissao')"
-              rounded="lg"
-              class="mb-2 nav-item-custom"
-              color="primary"
-            >
-              <template v-slot:prepend>
-                <v-icon icon="mdi-account-group-outline" class="mr-1"></v-icon>
-              </template>
-              <v-list-item-title class="font-weight-bold text-body-2">
-                Painel da Comissão
-              </v-list-item-title>
-              <v-list-item-subtitle v-if="!railMode" class="text-caption text-medium-emphasis">
-                Quadro do Elenco, Risco & ACWR
-              </v-list-item-subtitle>
-            </v-list-item>
+        <v-list-item
+          value="comissao"
+          :active="menuAtivo === 'comissao'"
+          @click="selecionarMenu('comissao')"
+          rounded="lg"
+          class="mb-2 nav-item-custom"
+          color="primary"
+        >
+          <template v-slot:prepend>
+            <v-icon icon="mdi-account-group-outline" class="mr-2" color="primary"></v-icon>
           </template>
-        </v-tooltip>
+          <v-list-item-title class="font-weight-bold text-body-2">
+            Painel da Comissão
+          </v-list-item-title>
+          <v-list-item-subtitle class="text-caption text-medium-emphasis">
+            Quadro do Elenco, Risco & ACWR
+          </v-list-item-subtitle>
+        </v-list-item>
 
         <!-- 3. Painel do Atleta -->
-        <v-tooltip text="Painel do Atleta (Minutagem & Borg)" :disabled="!railMode" location="right">
-          <template v-slot:activator="{ props }">
-            <v-list-item
-              v-bind="props"
-              value="atleta"
-              :active="menuAtivo === 'atleta'"
-              @click="selecionarMenu('atleta')"
-              rounded="lg"
-              class="mb-2 nav-item-custom"
-              color="warning"
-            >
-              <template v-slot:prepend>
-                <v-icon icon="mdi-account-details-outline" class="mr-1"></v-icon>
-              </template>
-              <v-list-item-title class="font-weight-bold text-body-2">
-                Painel do Atleta
-              </v-list-item-title>
-              <v-list-item-subtitle v-if="!railMode" class="text-caption text-medium-emphasis">
-                Carga Individual, Minutos & Borg
-              </v-list-item-subtitle>
-            </v-list-item>
+        <v-list-item
+          value="atleta"
+          :active="menuAtivo === 'atleta'"
+          @click="selecionarMenu('atleta')"
+          rounded="lg"
+          class="mb-2 nav-item-custom"
+          color="accent"
+        >
+          <template v-slot:prepend>
+            <v-icon icon="mdi-account-details-outline" class="mr-2" color="accent"></v-icon>
           </template>
-        </v-tooltip>
+          <v-list-item-title class="font-weight-bold text-body-2">
+            Painel do Atleta
+          </v-list-item-title>
+          <v-list-item-subtitle class="text-caption text-medium-emphasis">
+            Carga Individual & Minutagem
+          </v-list-item-subtitle>
+        </v-list-item>
 
         <!-- 4. Relatório Pós-Jogo -->
-        <v-tooltip text="Relatório Pós-Jogo (Heatmap Real & 5 Zonas)" :disabled="!railMode" location="right">
-          <template v-slot:activator="{ props }">
-            <v-list-item
-              v-bind="props"
-              value="relatorio"
-              :active="menuAtivo === 'relatorio'"
-              @click="selecionarMenu('relatorio')"
-              rounded="lg"
-              class="mb-2 nav-item-custom"
-              color="info"
-            >
-              <template v-slot:prepend>
-                <v-icon icon="mdi-file-document-chart-outline" class="mr-1"></v-icon>
-              </template>
-              <v-list-item-title class="font-weight-bold text-body-2">
-                Relatório Pós-Jogo
-              </v-list-item-title>
-              <v-list-item-subtitle v-if="!railMode" class="text-caption text-medium-emphasis">
-                Dossiê, Heatmap Real & 5 Zonas
-              </v-list-item-subtitle>
-            </v-list-item>
+        <v-list-item
+          value="relatorio"
+          :active="menuAtivo === 'relatorio'"
+          @click="selecionarMenu('relatorio')"
+          rounded="lg"
+          class="mb-2 nav-item-custom"
+          color="secondary"
+        >
+          <template v-slot:prepend>
+            <v-icon icon="mdi-file-document-chart-outline" class="mr-2" color="secondary"></v-icon>
           </template>
-        </v-tooltip>
+          <v-list-item-title class="font-weight-bold text-body-2">
+            Relatório Pós-Jogo
+          </v-list-item-title>
+          <v-list-item-subtitle class="text-caption text-medium-emphasis">
+            Dossiê, Heatmap Real & 5 Zonas
+          </v-list-item-subtitle>
+        </v-list-item>
       </v-list>
 
       <v-spacer></v-spacer>
 
-      <!-- Status do Sistema no Rodapé do Menu -->
+      <!-- Status do Sistema no Rodapé do Menu (Limpo, sem badges redundantes ou botões extras) -->
       <template v-slot:append>
-        <div v-if="!railMode" class="pa-3 border-t bg-surface-darken-1">
+        <div class="pa-3 border-t" style="background: rgba(14, 21, 29, 0.9);">
           <div class="d-flex align-center justify-space-between mb-1">
             <span class="text-caption text-medium-emphasis">Partida Ativa:</span>
             <v-chip size="x-small" color="primary" variant="flat" class="font-weight-bold">
@@ -186,57 +132,20 @@
           <div class="text-caption text-truncate font-weight-medium text-slate-200">
             {{ partidaAtiva.nome }}
           </div>
-
-          <div class="mt-3 pt-2 border-t d-flex flex-column gap-1">
-            <div class="d-flex align-center text-caption text-success">
-              <v-icon icon="mdi-circle-medium" size="18"></v-icon>
-              <span>Metrica Sports 25 Hz</span>
-            </div>
-            <div class="d-flex align-center text-caption text-info">
-              <v-icon icon="mdi-check-decagram" size="16" class="mr-1"></v-icon>
-              <span>Integração Borg CR-10</span>
-            </div>
-          </div>
-
-          <!-- Botão explícito para esconder o menu no rodapé -->
-          <v-btn
-            block
-            variant="tonal"
-            size="small"
-            color="grey-lighten-2"
-            prepend-icon="mdi-chevron-left"
-            @click.stop="drawerAberto = false"
-            class="mt-3 text-caption font-weight-bold"
-          >
-            Esconder Menu
-          </v-btn>
-        </div>
-
-        <div v-else class="pa-2 border-t d-flex flex-column align-center gap-2">
-          <v-tooltip text="Esconder menu" location="right">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon="mdi-chevron-left"
-                size="small"
-                variant="text"
-                color="grey-lighten-2"
-                @click.stop="drawerAberto = false"
-              ></v-btn>
-            </template>
-          </v-tooltip>
         </div>
       </template>
     </v-navigation-drawer>
 
     <!-- TOP APP BAR -->
     <v-app-bar color="transparent" elevation="0" height="64" class="topbar-custom">
-      <v-tooltip :text="drawerAberto ? 'Esconder menu lateral' : 'Abrir menu lateral'" location="bottom">
+      <!-- Botão para reabrir o menu quando ele estiver recolhido -->
+      <v-tooltip text="Abrir menu lateral" location="bottom">
         <template v-slot:activator="{ props }">
           <v-app-bar-nav-icon
+            v-if="!drawerAberto"
             v-bind="props"
-            @click.stop="alternarDrawer"
-            :color="drawerAberto ? 'grey-lighten-1' : 'primary'"
+            @click.stop="drawerAberto = true"
+            color="primary"
             class="mr-1"
           ></v-app-bar-nav-icon>
         </template>
@@ -295,7 +204,8 @@
     </v-app-bar>
 
     <!-- CONTEÚDO PRINCIPAL (RENDERIZAÇÃO DOS 4 MÓDULOS) -->
-    <v-main class="main-viewport pa-4 pa-md-6">
+    <v-main class="app-main-layout">
+      <div class="main-viewport px-4 px-md-6 pt-6 pb-12">
       <!-- Alertas de Feedback -->
       <v-alert
         v-if="mensagemAlerta"
@@ -313,16 +223,16 @@
       <!-- ========================================================================= -->
       <div v-if="menuAtivo === 'dados'">
         <v-row>
-          <v-col cols="12" md="8">
+          <v-col cols="12" md="7">
             <v-card class="glass-card pa-4 mb-4" elevation="0">
               <div class="d-flex align-center mb-3">
-                <v-avatar color="secondary" variant="tonal" class="mr-3">
-                  <v-icon icon="mdi-file-upload-outline" color="secondary"></v-icon>
+                <v-avatar color="primary" variant="tonal" class="mr-3">
+                  <v-icon icon="mdi-file-upload-outline" color="primary"></v-icon>
                 </v-avatar>
                 <div>
-                  <h2 class="text-h6 font-weight-bold">Importação de Arquivo CSV (Tracking 25 Hz)</h2>
+                  <h2 class="text-h6 font-weight-bold">Importação de Arquivo CSV de Rastreamento</h2>
                   <p class="text-caption text-medium-emphasis">
-                    Envie as coordenadas bidimensionais brutas (X, Y) da Metrica Sports para processamento do motor cinemático.
+                    Envie o arquivo CSV oficial com coordenadas de rastreamento para processamento cinemático completo.
                   </p>
                 </div>
               </div>
@@ -364,80 +274,20 @@
                 Processar & Integrar aos Painéis
               </v-btn>
             </v-card>
-
-            <!-- Card de Ingestão Remota / URL -->
-            <v-card class="glass-card pa-4 mb-4" elevation="0">
-              <div class="d-flex align-center mb-3">
-                <v-avatar color="info" variant="tonal" class="mr-3">
-                  <v-icon icon="mdi-link-variant" color="info"></v-icon>
-                </v-avatar>
-                <div>
-                  <h2 class="text-h6 font-weight-bold">Importação via URL / Repositório Externo</h2>
-                  <p class="text-caption text-medium-emphasis">
-                    Forneça uma URL pública de tracking ou selecione um dos conjuntos oficiais pré-configurados.
-                  </p>
-                </div>
-              </div>
-
-              <v-divider class="mb-4"></v-divider>
-
-              <v-text-field
-                v-model="urlDataset"
-                label="URL do Arquivo CSV (Raw Data)"
-                variant="outlined"
-                color="info"
-                placeholder="https://.../dados_rastreamento.csv"
-                class="mb-3"
-              ></v-text-field>
-
-              <div class="d-flex flex-wrap gap-2 mb-4">
-                <v-chip
-                  size="small"
-                  variant="outlined"
-                  color="info"
-                  @click="aplicarPresetUrl('home')"
-                  prepend-icon="mdi-shield-home"
-                >
-                  Preset 1: Equipe Mandante (Metrica Game 1)
-                </v-chip>
-                <v-chip
-                  size="small"
-                  variant="outlined"
-                  color="info"
-                  @click="aplicarPresetUrl('away')"
-                  prepend-icon="mdi-shield-airplane"
-                >
-                  Preset 2: Equipe Visitante (Metrica Game 1)
-                </v-chip>
-              </div>
-
-              <v-btn
-                color="info"
-                size="large"
-                block
-                :loading="carregando"
-                :disabled="!urlDataset"
-                prepend-icon="mdi-download-network"
-                @click="processarUrlDataset"
-                class="font-weight-bold"
-              >
-                Baixar & Processar Dataset
-              </v-btn>
-            </v-card>
           </v-col>
 
           <!-- Coluna Lateral de Requisitos -->
-          <v-col cols="12" md="4">
+          <v-col cols="12" md="5">
             <v-card class="glass-card pa-4 mb-4" elevation="0">
               <h3 class="text-subtitle-1 font-weight-bold d-flex align-center mb-2">
                 <v-icon icon="mdi-information-outline" color="primary" class="mr-2"></v-icon>
-                Requisitos do Metrica Sports
+                Requisitos do Arquivo CSV
               </h3>
               <ul class="text-caption text-medium-emphasis pl-4 d-flex flex-column gap-2">
-                <li><strong>Taxa de Amostragem:</strong> Séries temporais de 25 Hz (25 frames/segundo).</li>
+                <li><strong>Estrutura Temporal:</strong> Coordenadas bidimensionais (X, Y) amostradas temporalmente por frame.</li>
                 <li><strong>5 Zonas de Velocidade:</strong> Z1 (&lt;7.2), Z2 (7.2-14.4), Z3 (14.4-19.8), Z4 HSR (19.8-25.2), Z5 Sprint (&gt;25.2 km/h).</li>
-                <li><strong>Carga Interna:</strong> Coleta pós-jogo (20-30 min) via Escala Borg CR-10.</li>
-                <li><strong>Índices Integrados:</strong> ACWR (Gabbett), Monotonia e Tensão (Foster), Razão de Eficiência.</li>
+                <li><strong>Carga Interna Integrada:</strong> Cálculo da PSE (Percepção Subjetiva de Esforço) pós-confronto.</li>
+                <li><strong>Índices Fisiológicos:</strong> ACWR (Carga Aguda:Crônica), Monotonia e Tensão do microciclo.</li>
               </ul>
             </v-card>
 
@@ -904,11 +754,11 @@
                   class="soccer-pitch"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <!-- Gramado Verde Escuro -->
-                  <rect x="0" y="0" width="105" height="68" fill="#0c2314" />
+                  <!-- Gramado Tático em Navy Profundo -->
+                  <rect x="0" y="0" width="105" height="68" fill="#101820" />
 
                   <!-- Listras do Gramado -->
-                  <g opacity="0.15">
+                  <g opacity="0.06">
                     <rect x="0" y="0" width="10.5" height="68" fill="#ffffff" />
                     <rect x="21" y="0" width="10.5" height="68" fill="#ffffff" />
                     <rect x="42" y="0" width="10.5" height="68" fill="#ffffff" />
@@ -916,57 +766,57 @@
                     <rect x="84" y="0" width="10.5" height="68" fill="#ffffff" />
                   </g>
 
-                  <!-- Linhas Limítrofes Oficiais -->
-                  <rect x="0" y="0" width="105" height="68" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.7" />
+                  <!-- Linhas Limítrofes Oficiais em Marfim Translúcido -->
+                  <rect x="0" y="0" width="105" height="68" fill="none" stroke="rgba(232, 230, 223, 0.45)" stroke-width="0.7" />
 
                   <!-- Linha de Meio de Campo -->
-                  <line x1="52.5" y1="0" x2="52.5" y2="68" stroke="rgba(255,255,255,0.7)" stroke-width="0.7" />
+                  <line x1="52.5" y1="0" x2="52.5" y2="68" stroke="rgba(232, 230, 223, 0.45)" stroke-width="0.7" />
 
                   <!-- Círculo Central Oficial (Raio 9.15m) -->
-                  <circle cx="52.5" cy="34" r="9.15" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.7" />
-                  <circle cx="52.5" cy="34" r="0.8" fill="rgba(255,255,255,0.9)" />
+                  <circle cx="52.5" cy="34" r="9.15" fill="none" stroke="rgba(232, 230, 223, 0.45)" stroke-width="0.7" />
+                  <circle cx="52.5" cy="34" r="0.8" fill="rgba(232, 230, 223, 0.8)" />
 
                   <!-- Grande Área Esquerda (16.5m x 40.32m) -->
-                  <rect x="0" y="13.84" width="16.5" height="40.32" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.7" />
+                  <rect x="0" y="13.84" width="16.5" height="40.32" fill="none" stroke="rgba(232, 230, 223, 0.45)" stroke-width="0.7" />
                   <!-- Pequena Área Esquerda (5.5m x 18.32m) -->
-                  <rect x="0" y="24.84" width="5.5" height="18.32" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.7" />
+                  <rect x="0" y="24.84" width="5.5" height="18.32" fill="none" stroke="rgba(232, 230, 223, 0.45)" stroke-width="0.7" />
                   <!-- Marca do Pênalti Esquerda (11m) -->
-                  <circle cx="11" cy="34" r="0.7" fill="rgba(255,255,255,0.9)" />
+                  <circle cx="11" cy="34" r="0.7" fill="rgba(232, 230, 223, 0.8)" />
 
                   <!-- Grande Área Direita -->
-                  <rect x="88.5" y="13.84" width="16.5" height="40.32" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.7" />
+                  <rect x="88.5" y="13.84" width="16.5" height="40.32" fill="none" stroke="rgba(232, 230, 223, 0.45)" stroke-width="0.7" />
                   <!-- Pequena Área Direita -->
-                  <rect x="99.5" y="24.84" width="5.5" height="18.32" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="0.7" />
+                  <rect x="99.5" y="24.84" width="5.5" height="18.32" fill="none" stroke="rgba(232, 230, 223, 0.45)" stroke-width="0.7" />
                   <!-- Marca do Pênalti Direita -->
-                  <circle cx="94" cy="34" r="0.7" fill="rgba(255,255,255,0.9)" />
+                  <circle cx="94" cy="34" r="0.7" fill="rgba(232, 230, 223, 0.8)" />
 
-                  <!-- Polígono Envolvente / Bloco Tático da Equipe (Convex Hull tático) -->
+                  <!-- Polígono Envolvente / Bloco Tático da Equipe (Convex Hull em Verde Petróleo) -->
                   <polygon
                     :points="pontosBlocoTatico"
-                    fill="rgba(16, 185, 129, 0.08)"
-                    stroke="#10b981"
+                    fill="rgba(46, 107, 102, 0.16)"
+                    stroke="#2E6B66"
                     stroke-width="0.8"
                     stroke-dasharray="2, 1"
                   />
 
-                  <!-- Raio de Compacidade no Baricentro -->
+                  <!-- Raio de Compacidade no Baricentro (Azul Ardósia) -->
                   <circle
                     :cx="baricentroTime.x"
                     :cy="baricentroTime.y"
                     :r="compacidadeTime"
-                    fill="rgba(16, 185, 129, 0.04)"
-                    stroke="#10b981"
-                    stroke-width="0.5"
+                    fill="rgba(79, 110, 128, 0.08)"
+                    stroke="#4F6E80"
+                    stroke-width="0.6"
                     stroke-dasharray="1, 1"
                   />
 
-                  <!-- Ponto do Baricentro -->
+                  <!-- Ponto do Baricentro (Destaque em Dourado Queimado) -->
                   <circle
                     :cx="baricentroTime.x"
                     :cy="baricentroTime.y"
-                    r="1.4"
-                    fill="#10b981"
-                    stroke="#ffffff"
+                    r="1.5"
+                    fill="#B38C40"
+                    stroke="#E8E6DF"
                     stroke-width="0.5"
                   />
 
@@ -1573,19 +1423,19 @@
                     stroke-width="1"
                   />
 
-                  <!-- Média da Posição (Azul) -->
+                  <!-- Média da Posição (Azul ardósia) -->
                   <polygon
                     :points="gerarPontosRadar(dadosRadarPosicao)"
-                    fill="rgba(56, 189, 248, 0.22)"
-                    stroke="#38bdf8"
+                    fill="rgba(79, 110, 128, 0.25)"
+                    stroke="#4F6E80"
                     stroke-width="2"
                   />
 
-                  <!-- Atleta Selecionado (Verde) -->
+                  <!-- Atleta Selecionado (Verde petróleo/teal) -->
                   <polygon
                     :points="gerarPontosRadar(dadosRadarAtleta)"
-                    fill="rgba(16, 185, 129, 0.45)"
-                    stroke="#10b981"
+                    fill="rgba(46, 107, 102, 0.45)"
+                    stroke="#2E6B66"
                     stroke-width="3"
                   />
 
@@ -1596,8 +1446,8 @@
                     :cx="calcularCoordenadaRadar(i, val).x"
                     :cy="calcularCoordenadaRadar(i, val).y"
                     r="5"
-                    fill="#10b981"
-                    stroke="#ffffff"
+                    fill="#2E6B66"
+                    stroke="#E8E6DF"
                     stroke-width="1.5"
                   />
 
@@ -1608,7 +1458,7 @@
                     :x="calcularCoordenadaRadar(i, 1.20).x"
                     :y="calcularCoordenadaRadar(i, 1.20).y"
                     font-size="11"
-                    fill="#94a3b8"
+                    fill="#E8E6DF"
                     text-anchor="middle"
                     dominant-baseline="central"
                     font-weight="bold"
@@ -1844,9 +1694,9 @@
             <!-- Parecer da Comissão Técnica -->
             <v-col cols="12" md="3">
               <v-card
-                :color="analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? 'rgba(239, 68, 68, 0.15)' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)'"
+                :color="analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? 'rgba(217, 83, 79, 0.15)' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? 'rgba(179, 140, 64, 0.15)' : 'rgba(46, 107, 102, 0.15)'"
                 class="pa-3 h-100 d-flex flex-column justify-center border"
-                :style="{ borderColor: analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? '#ef4444' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? '#f59e0b' : '#10b981' }"
+                :style="{ borderColor: analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? '#D9534F' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? '#B38C40' : '#2E6B66' }"
                 elevation="0"
               >
                 <div class="d-flex align-center mb-1">
@@ -2085,6 +1935,7 @@
           </v-alert>
         </v-card>
       </div>
+      </div>
     </v-main>
   </v-app>
 </template>
@@ -2123,7 +1974,6 @@ const carregando = ref(false)
 // Inserção de Dados
 const arquivoUpload = ref(null)
 const nomeNovaPartida = ref('')
-const urlDataset = ref('')
 
 // Controle de Minutos Jogados & Borg
 const minutosJogadosAtleta = ref(90)
@@ -2594,10 +2444,10 @@ const tituloSecaoAtiva = computed(() => {
 })
 
 const subtituloSecaoAtiva = computed(() => {
-  if (menuAtivo.value === 'dados') return 'Ingestão e processamento de tracking espacial 25 Hz (Metrica Sports)'
-  if (menuAtivo.value === 'comissao') return 'Monitoramento do elenco, semáforo de risco ACWR, alertas de sobrecarga e dinâmica tática'
-  if (menuAtivo.value === 'atleta') return 'Histórico evolutivo de carga, minutagem, comparação com média da posição e escala Borg CR-10'
-  if (menuAtivo.value === 'relatorio') return 'Dossiê consolidado individual da partida, mapa de calor real em canvas e 5 zonas de velocidade'
+  if (menuAtivo.value === 'dados') return 'Ingestão e processamento cinemático de arquivos CSV de rastreamento'
+  if (menuAtivo.value === 'comissao') return 'Monitoramento do elenco, semáforo de risco de lesão e dinâmica tática'
+  if (menuAtivo.value === 'atleta') return 'Histórico evolutivo de carga, minutagem e comparação com a média da posição'
+  if (menuAtivo.value === 'relatorio') return 'Dossiê consolidado da partida, mapa de calor e distribuição em 5 zonas de velocidade'
   return ''
 })
 
@@ -3302,14 +3152,14 @@ function desenharVetoresSprint(ctx, atleta, toPxX, toPxY) {
     const x2 = toPxX(v.x2)
     const y2 = toPxY(v.y2)
 
-    // Gradiente da linha de sprint
+    // Gradiente da linha de sprint (Azul ardósia para Dourado queimado)
     const grad = ctx.createLinearGradient(x1, y1, x2, y2)
-    grad.addColorStop(0, 'rgba(6, 182, 212, 0.4)')
-    grad.addColorStop(1, '#f43f5e')
+    grad.addColorStop(0, 'rgba(79, 110, 128, 0.4)')
+    grad.addColorStop(1, '#B38C40')
 
     ctx.strokeStyle = grad
     ctx.lineWidth = 3.5
-    ctx.shadowColor = '#f43f5e'
+    ctx.shadowColor = '#B38C40'
     ctx.shadowBlur = 8
 
     // Linha
@@ -3321,7 +3171,7 @@ function desenharVetoresSprint(ctx, atleta, toPxX, toPxY) {
     // Seta na ponta
     const angle = Math.atan2(y2 - y1, x2 - x1)
     const headLen = 11
-    ctx.fillStyle = '#f43f5e'
+    ctx.fillStyle = '#B38C40'
     ctx.beginPath()
     ctx.moveTo(x2, y2)
     ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6))
@@ -3331,9 +3181,9 @@ function desenharVetoresSprint(ctx, atleta, toPxX, toPxY) {
 
     // Badge com a velocidade do sprint (ex: "33.8 km/h")
     ctx.shadowBlur = 0
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'
+    ctx.fillStyle = 'rgba(16, 24, 32, 0.92)'
     ctx.fillRect(x2 - 30, y2 - 20, 60, 16)
-    ctx.strokeStyle = '#f43f5e'
+    ctx.strokeStyle = '#B38C40'
     ctx.lineWidth = 1
     ctx.strokeRect(x2 - 30, y2 - 20, 60, 16)
 
@@ -3470,24 +3320,6 @@ function processarUploadArquivo() {
   }, 1200)
 }
 
-function processarUrlDataset() {
-  carregando.value = true
-  setTimeout(() => {
-    carregando.value = false
-    mensagemAlerta.value = 'Dataset remoto baixado e processado com sucesso!'
-    tipoAlerta.value = 'success'
-    menuAtivo.value = 'comissao'
-  }, 1400)
-}
-
-function aplicarPresetUrl(tipo) {
-  if (tipo === 'home') {
-    urlDataset.value = 'https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Home_Team.csv'
-  } else {
-    urlDataset.value = 'https://raw.githubusercontent.com/metrica-sports/sample-data/master/data/Sample_Game_1/Sample_Game_1_RawTrackingData_Away_Team.csv'
-  }
-}
-
 function carregarPartidasPadrao() {
   mensagemAlerta.value = 'Demonstração de 3 partidas recarregada com sucesso!'
   tipoAlerta.value = 'info'
@@ -3512,6 +3344,11 @@ function carregarPartidasPadrao() {
   color: #E8E6DF !important; /* Marfim */
   min-height: 100vh;
   font-family: var(--font-sans);
+}
+
+
+.app-main-layout {
+  padding-top: calc(var(--v-layout-top, 64px) + 24px) !important;
 }
 
 .main-viewport {
