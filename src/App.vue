@@ -8,7 +8,8 @@
       <!-- BARRA LATERAL (MENU PRINCIPAL) -->
       <v-navigation-drawer
         v-model="drawerAberto"
-        disable-resize-watcher
+        :temporary="mobile"
+        :scrim="mobile"
         color="#0E151D"
         width="270"
         border
@@ -174,17 +175,17 @@
         <v-tooltip text="Abrir menu lateral" location="bottom">
           <template v-slot:activator="{ props }">
             <v-app-bar-nav-icon
-              v-if="!drawerAberto"
+              v-if="!drawerAberto || mobile"
               v-bind="props"
-              @click.stop="drawerAberto = true"
+              @click.stop="drawerAberto = !drawerAberto"
               color="primary"
               class="mr-1"
             ></v-app-bar-nav-icon>
           </template>
         </v-tooltip>
 
-        <!-- Logo Oficial Visão 90 visível quando o menu estiver escondido -->
-        <div v-if="!drawerAberto" class="d-flex align-center mr-3 pl-1">
+        <!-- Logo Oficial Visão 90 visível quando o menu estiver escondido (oculta em mobile para não comprimir a barra) -->
+        <div v-if="!drawerAberto" class="d-none d-sm-flex align-center mr-3 pl-1">
           <img
             src="/visao90-header.png"
             alt="Visão 90"
@@ -193,32 +194,31 @@
           <v-divider vertical class="mx-3 my-2"></v-divider>
         </div>
 
-        <div class="d-flex align-center">
-          <h1 class="text-subtitle-1 text-sm-h6 font-weight-bold ml-1 mb-0">
+        <div class="d-flex align-center text-truncate mr-1">
+          <h1 class="text-subtitle-1 text-sm-h6 font-weight-bold ml-1 mb-0 text-truncate">
             {{ tituloSecaoAtiva }}
           </h1>
-          <span class="text-caption text-medium-emphasis ml-3 d-none d-md-inline">
+          <span class="text-caption text-medium-emphasis ml-3 d-none d-md-inline text-truncate">
             {{ subtituloSecaoAtiva }}
           </span>
         </div>
 
         <v-spacer></v-spacer>
 
-        <!-- Seletor Rápido de Partida Ativa (sempre acessível no topo) -->
-        <div style="min-width: 200px; max-width: 300px;" class="mr-2 mr-sm-3">
+        <!-- Seletor Rápido de Partida Ativa (sempre acessível no topo, com largura adaptável) -->
+        <div class="select-partida-wrapper mr-1 mr-sm-3">
           <v-select
             v-model="partidaAtivaId"
             :items="partidas"
             item-title="nome"
             item-value="id"
-            label="Partida em Análise"
+            label="Partida"
             density="compact"
             variant="outlined"
             color="primary"
             hide-details
-            prepend-inner-icon="mdi-shield-outline"
             class="select-partida-top"
-            no-data-text="Nenhuma partida cadastrada"
+            no-data-text="Nenhuma partida"
           ></v-select>
         </div>
 
@@ -230,9 +230,10 @@
           size="small"
           prepend-icon="mdi-lightning-bolt"
           @click="carregarPartidasPadrao"
-          class="font-weight-bold mr-2"
+          class="font-weight-bold mr-1 mr-sm-2 text-none"
         >
-          Carregar Dados
+          <span class="d-none d-sm-inline">Carregar Dados</span>
+          <span class="d-sm-none">Dados</span>
         </v-btn>
 
         <!-- Menu do Usuário no Topo -->
@@ -243,15 +244,16 @@
               variant="tonal"
               color="secondary"
               size="small"
-              class="font-weight-bold d-flex align-center text-none px-2 mr-2"
+              class="font-weight-bold d-flex align-center text-none px-1 px-sm-2 mr-1 mr-sm-2"
+              min-width="36"
             >
-              <v-avatar size="22" :color="usuarioLogado.cor || 'secondary'" class="mr-1 text-3xs font-weight-bold text-ivory">
+              <v-avatar size="24" :color="usuarioLogado.cor || 'secondary'" class="mr-0 mr-sm-1 text-3xs font-weight-bold text-ivory">
                 {{ usuarioLogado.avatar || 'U' }}
               </v-avatar>
-              <span class="d-none d-sm-inline text-truncate" style="max-width: 130px;">
+              <span class="d-none d-md-inline text-truncate" style="max-width: 120px;">
                 {{ usuarioLogado.nome }}
               </span>
-              <v-icon icon="mdi-chevron-down" size="14" class="ml-1"></v-icon>
+              <v-icon icon="mdi-chevron-down" size="14" class="ml-1 d-none d-sm-inline"></v-icon>
             </v-btn>
           </template>
           <v-card color="#1B2530" border class="pa-2 rounded-lg" min-width="230" elevation="8">
@@ -279,7 +281,7 @@
 
     <!-- CONTEÚDO PRINCIPAL (RENDERIZAÇÃO DOS 4 MÓDULOS) -->
     <v-main class="app-main-layout">
-      <div class="main-viewport px-4 px-md-6 pt-6 pb-12">
+      <div class="main-viewport px-2 px-sm-4 px-md-6 pt-3 pt-sm-6 pb-12">
       <!-- Alertas de Feedback -->
       <v-alert
         v-if="mensagemAlerta"
@@ -421,76 +423,78 @@
             </v-chip>
           </div>
 
-          <v-table hover class="bg-transparent table-custom">
-            <thead>
-              <tr>
-                <th class="text-left font-weight-bold">Partida / Confronto</th>
-                <th class="text-left font-weight-bold">Data</th>
-                <th class="text-left font-weight-bold">Duração</th>
-                <th class="text-left font-weight-bold">Volume Coletivo</th>
-                <th class="text-left font-weight-bold">Ritmo Médio</th>
-                <th class="text-left font-weight-bold">Sprints &gt; 25.2 km/h</th>
-                <th class="text-center font-weight-bold">Status / Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="p in partidas"
-                :key="'partida-table-' + p.id"
-                :class="{ 'bg-surface-variant': p.id === partidaAtivaId }"
-              >
-                <td>
-                  <strong>{{ p.nome }}</strong>
-                  <div class="text-caption text-medium-emphasis">Adversário: {{ p.adversario }} &middot; Placar: {{ p.placar }}</div>
-                </td>
-                <td class="text-caption">{{ p.data }}</td>
-                <td class="text-caption">{{ p.duracao }} min</td>
-                <td><strong>{{ (calcularDistanciaColetiva(p.atletas) / 1000).toFixed(1) }} km</strong></td>
-                <td>
-                  <v-chip size="x-small" color="info" variant="tonal" class="font-weight-bold">
-                    {{ calcularMediaMmin(p.atletas).toFixed(0) }} m/min
-                  </v-chip>
-                </td>
-                <td class="text-warning font-weight-bold">
-                  {{ calcularTotalSprintsPicos(p.atletas) }}
-                </td>
-                <td class="text-center">
-                  <div class="d-flex align-center justify-center gap-1">
-                    <v-btn
-                      size="small"
-                      :color="p.id === partidaAtivaId ? 'success' : 'primary'"
-                      :variant="p.id === partidaAtivaId ? 'flat' : 'outlined'"
-                      @click="selecionarPartida(p.id)"
-                      class="font-weight-bold"
-                    >
-                      {{ p.id === partidaAtivaId ? 'Ativa' : 'Selecionar' }}
-                    </v-btn>
-                    <v-tooltip text="Excluir partida do seu repositório" location="top">
-                      <template v-slot:activator="{ props }">
-                        <v-btn
-                          v-bind="props"
-                          icon="mdi-trash-can-outline"
-                          size="small"
-                          variant="text"
-                          color="error"
-                          @click.stop="excluirPartida(p.id)"
-                        ></v-btn>
-                      </template>
-                    </v-tooltip>
-                  </div>
-                </td>
-              </tr>
+          <div class="table-responsive-wrapper">
+            <v-table hover class="bg-transparent table-custom">
+              <thead>
+                <tr>
+                  <th class="text-left font-weight-bold">Partida / Confronto</th>
+                  <th class="text-left font-weight-bold">Data</th>
+                  <th class="text-left font-weight-bold">Duração</th>
+                  <th class="text-left font-weight-bold">Volume Coletivo</th>
+                  <th class="text-left font-weight-bold">Ritmo Médio</th>
+                  <th class="text-left font-weight-bold">Sprints &gt; 25.2 km/h</th>
+                  <th class="text-center font-weight-bold">Status / Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="p in partidas"
+                  :key="'partida-table-' + p.id"
+                  :class="{ 'bg-surface-variant': p.id === partidaAtivaId }"
+                >
+                  <td>
+                    <strong>{{ p.nome }}</strong>
+                    <div class="text-caption text-medium-emphasis">Adversário: {{ p.adversario }} &middot; Placar: {{ p.placar }}</div>
+                  </td>
+                  <td class="text-caption">{{ p.data }}</td>
+                  <td class="text-caption">{{ p.duracao }} min</td>
+                  <td><strong>{{ (calcularDistanciaColetiva(p.atletas) / 1000).toFixed(1) }} km</strong></td>
+                  <td>
+                    <v-chip size="x-small" color="info" variant="tonal" class="font-weight-bold">
+                      {{ calcularMediaMmin(p.atletas).toFixed(0) }} m/min
+                    </v-chip>
+                  </td>
+                  <td class="text-warning font-weight-bold">
+                    {{ calcularTotalSprintsPicos(p.atletas) }}
+                  </td>
+                  <td class="text-center">
+                    <div class="d-flex align-center justify-center gap-1">
+                      <v-btn
+                        size="small"
+                        :color="p.id === partidaAtivaId ? 'success' : 'primary'"
+                        :variant="p.id === partidaAtivaId ? 'flat' : 'outlined'"
+                        @click="selecionarPartida(p.id)"
+                        class="font-weight-bold"
+                      >
+                        {{ p.id === partidaAtivaId ? 'Ativa' : 'Selecionar' }}
+                      </v-btn>
+                      <v-tooltip text="Excluir partida do seu repositório" location="top">
+                        <template v-slot:activator="{ props }">
+                          <v-btn
+                            v-bind="props"
+                            icon="mdi-trash-can-outline"
+                            size="small"
+                            variant="text"
+                            color="error"
+                            @click.stop="excluirPartida(p.id)"
+                          ></v-btn>
+                        </template>
+                      </v-tooltip>
+                    </div>
+                  </td>
+                </tr>
 
-              <!-- Estado Vazio quando não houver partidas cadastradas -->
-              <tr v-if="partidas.length === 0">
-                <td colspan="7" class="text-center py-8 text-slate-400">
-                  <v-icon icon="mdi-folder-open-outline" size="36" class="mb-2 d-block mx-auto text-slate-500"></v-icon>
-                  <div class="font-weight-bold text-body-2 text-slate-300">Nenhuma partida importada para esta conta</div>
-                  <div class="text-caption text-slate-500 mt-1">Importe um arquivo CSV no formulário acima ou clique no botão "Recarregar Demonstração".</div>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
+                <!-- Estado Vazio quando não houver partidas cadastradas -->
+                <tr v-if="partidas.length === 0">
+                  <td colspan="7" class="text-center py-8 text-slate-400">
+                    <v-icon icon="mdi-folder-open-outline" size="36" class="mb-2 d-block mx-auto text-slate-500"></v-icon>
+                    <div class="font-weight-bold text-body-2 text-slate-300">Nenhuma partida importada para esta conta</div>
+                    <div class="text-caption text-slate-500 mt-1">Importe um arquivo CSV no formulário acima ou clique no botão "Recarregar Demonstração".</div>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </div>
         </v-card>
       </div>
 
@@ -536,106 +540,106 @@
         </div>
 
         <!-- 1. SEMÁFORO DE RISCO ACWR COLETIVO (CARDS DE TRIAGEM GABBETT) -->
-        <v-row class="mb-4">
+        <v-row class="mb-4" dense>
           <!-- Sweet Spot (0.8 a 1.3) -->
-          <v-col cols="12" sm="6" md="3">
-            <v-card class="glass-card pa-3 border-l-4 border-success" elevation="0">
+          <v-col cols="6" sm="6" md="3">
+            <v-card class="glass-card pa-2 pa-sm-3 border-l-4 border-success h-100" elevation="0">
               <div class="d-flex align-center justify-space-between">
-                <div class="d-flex align-center text-caption text-medium-emphasis text-uppercase font-weight-bold">
-                  <span>Faixa Ótima (Sweet Spot)</span>
+                <div class="d-flex align-center text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold">
+                  <span>Sweet Spot</span>
                   <v-tooltip text="Atletas com ACWR entre 0.8 e 1.3: zona de menor risco epidemiológico de lesão, com equilíbrio ideal entre aptidão e fadiga." location="top" max-width="320">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <v-icon icon="mdi-shield-check" color="success"></v-icon>
+                <v-icon icon="mdi-shield-check" color="success" size="20"></v-icon>
               </div>
-              <div class="d-flex align-baseline gap-2 mt-1">
-                <div class="text-h4 font-weight-black text-success">{{ contagemACWR.sweetSpot }}</div>
-                <div class="text-caption text-medium-emphasis">atletas (ACWR 0.8 - 1.3)</div>
+              <div class="d-flex align-baseline gap-1 gap-sm-2 mt-1">
+                <div class="text-h5 text-sm-h4 font-weight-black text-success">{{ contagemACWR.sweetSpot }}</div>
+                <div class="text-3xs text-sm-caption text-medium-emphasis">atletas</div>
               </div>
-              <div class="text-caption text-success font-weight-medium mt-1">
-                Menor risco predito de lesão
+              <div class="text-3xs text-sm-caption text-success font-weight-medium mt-1 text-truncate">
+                Menor risco de lesão
               </div>
             </v-card>
           </v-col>
 
           <!-- Sobrecarga Moderada (1.3 a 1.5) -->
-          <v-col cols="12" sm="6" md="3">
-            <v-card class="glass-card pa-3 border-l-4 border-warning" elevation="0">
+          <v-col cols="6" sm="6" md="3">
+            <v-card class="glass-card pa-2 pa-sm-3 border-l-4 border-warning h-100" elevation="0">
               <div class="d-flex align-center justify-space-between">
-                <div class="d-flex align-center text-caption text-medium-emphasis text-uppercase font-weight-bold">
-                  <span>Sobrecarga Moderada</span>
+                <div class="d-flex align-center text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold">
+                  <span>Sobrecarga</span>
                   <v-tooltip text="Atletas com ACWR entre 1.3 e 1.5: sinal de fadiga residual acumulada; recomenda-se modulação de treino e recuperação ativa." location="top" max-width="320">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <v-icon icon="mdi-alert-circle-outline" color="warning"></v-icon>
+                <v-icon icon="mdi-alert-circle-outline" color="warning" size="20"></v-icon>
               </div>
-              <div class="d-flex align-baseline gap-2 mt-1">
-                <div class="text-h4 font-weight-black text-warning">{{ contagemACWR.atencao }}</div>
-                <div class="text-caption text-medium-emphasis">atletas (ACWR 1.3 - 1.5)</div>
+              <div class="d-flex align-baseline gap-1 gap-sm-2 mt-1">
+                <div class="text-h5 text-sm-h4 font-weight-black text-warning">{{ contagemACWR.atencao }}</div>
+                <div class="text-3xs text-sm-caption text-medium-emphasis">atletas</div>
               </div>
-              <div class="text-caption text-warning font-weight-medium mt-1">
-                Atenção à recuperação e sono
+              <div class="text-3xs text-sm-caption text-warning font-weight-medium mt-1 text-truncate">
+                Atenção à recuperação
               </div>
             </v-card>
           </v-col>
 
           <!-- Zona de Perigo / Spike (> 1.5) -->
-          <v-col cols="12" sm="6" md="3">
-            <v-card class="glass-card pa-3 border-l-4 border-error" elevation="0">
+          <v-col cols="6" sm="6" md="3">
+            <v-card class="glass-card pa-2 pa-sm-3 border-l-4 border-error h-100" elevation="0">
               <div class="d-flex align-center justify-space-between">
-                <div class="d-flex align-center text-caption text-medium-emphasis text-uppercase font-weight-bold">
-                  <span>Zona de Perigo (Spike)</span>
+                <div class="d-flex align-center text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold">
+                  <span>Perigo (Spike)</span>
                   <v-tooltip text="Atletas com ACWR ≥ 1.5: pico excessivo de carga aguda sobre o lastro crônico; risco de lesão aumentado em até 4 a 5 vezes." location="top" max-width="320">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <v-icon icon="mdi-alert-octagon" color="error"></v-icon>
+                <v-icon icon="mdi-alert-octagon" color="error" size="20"></v-icon>
               </div>
-              <div class="d-flex align-baseline gap-2 mt-1">
-                <div class="text-h4 font-weight-black text-error">{{ contagemACWR.perigo }}</div>
-                <div class="text-caption text-medium-emphasis">atletas (ACWR &gt; 1.5)</div>
+              <div class="d-flex align-baseline gap-1 gap-sm-2 mt-1">
+                <div class="text-h5 text-sm-h4 font-weight-black text-error">{{ contagemACWR.perigo }}</div>
+                <div class="text-3xs text-sm-caption text-medium-emphasis">atletas</div>
               </div>
-              <div class="text-caption text-error font-weight-medium mt-1">
-                Alto risco de lesão muscular
+              <div class="text-3xs text-sm-caption text-error font-weight-medium mt-1 text-truncate">
+                Alto risco de lesão
               </div>
             </v-card>
           </v-col>
 
           <!-- Sub-treinamento (< 0.8) -->
-          <v-col cols="12" sm="6" md="3">
-            <v-card class="glass-card pa-3 border-l-4 border-info" elevation="0">
+          <v-col cols="6" sm="6" md="3">
+            <v-card class="glass-card pa-2 pa-sm-3 border-l-4 border-info h-100" elevation="0">
               <div class="d-flex align-center justify-space-between">
-                <div class="d-flex align-center text-caption text-medium-emphasis text-uppercase font-weight-bold">
-                  <span>Sub-treinamento</span>
+                <div class="d-flex align-center text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold">
+                  <span>Sub-treino</span>
                   <v-tooltip text="Atletas com ACWR < 0.8: carga crônica baixa; risco de estresse lesivo caso submetidos repentinamente a alta minutagem." location="top" max-width="320">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="14" class="ml-1 hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <v-icon icon="mdi-arrow-down-bold-circle-outline" color="info"></v-icon>
+                <v-icon icon="mdi-arrow-down-bold-circle-outline" color="info" size="20"></v-icon>
               </div>
-              <div class="d-flex align-baseline gap-2 mt-1">
-                <div class="text-h4 font-weight-black text-info">{{ contagemACWR.subtreino }}</div>
-                <div class="text-caption text-medium-emphasis">atletas (ACWR &lt; 0.8)</div>
+              <div class="d-flex align-baseline gap-1 gap-sm-2 mt-1">
+                <div class="text-h5 text-sm-h4 font-weight-black text-info">{{ contagemACWR.subtreino }}</div>
+                <div class="text-3xs text-sm-caption text-medium-emphasis">atletas</div>
               </div>
-              <div class="text-caption text-info font-weight-medium mt-1">
-                Risco de destreinamento
+              <div class="text-3xs text-sm-caption text-info font-weight-medium mt-1 text-truncate">
+                Destreinamento
               </div>
             </v-card>
           </v-col>
         </v-row>
 
         <!-- 2. PAINEL DE ALERTAS AUTOMATIZADOS (ACWR ELEVADO & ANOMALIA BORG VS TRACKING) -->
-        <v-card class="glass-card pa-4 mb-4" elevation="0" v-if="alertasComissao.length > 0">
+        <v-card class="glass-card pa-3 pa-sm-4 mb-4" elevation="0" v-if="alertasComissao.length > 0">
           <div class="d-flex align-center mb-3">
             <v-icon icon="mdi-bell-ring-outline" color="warning" class="mr-2"></v-icon>
             <h3 class="text-subtitle-1 font-weight-bold">Alertas Fisiológicos Automatizados da Comissão Técnica</h3>
@@ -674,121 +678,121 @@
         </v-card>
 
         <!-- 3. SEIS KPIS COLETIVOS DO ELENCO -->
-        <v-row class="mb-4">
-          <v-col cols="12" sm="6" md="4" lg="2">
-            <v-card class="glass-card kpi-card" elevation="0">
-              <v-card-item>
+        <v-row class="mb-4" dense>
+          <v-col cols="6" sm="6" md="4" lg="2">
+            <v-card class="glass-card kpi-card h-100" elevation="0">
+              <v-card-item class="pa-2 pa-sm-4">
                 <div class="d-flex align-center justify-space-between">
-                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Volume Coletivo</div>
+                  <div class="text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold text-truncate">Volume Coletivo</div>
                   <v-tooltip text="Distância física total somada percorrida por todos os atletas da equipe no confronto (em km)." location="top" max-width="300">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <div class="text-h4 font-weight-black mt-1 text-secondary">
+                <div class="text-h5 text-sm-h4 font-weight-black mt-1 text-secondary">
                   {{ (distanciaColetivaKm).toFixed(1) }} <span class="text-caption">km</span>
                 </div>
-                <div class="text-caption text-medium-emphasis mt-1">
-                  Média: {{ (distanciaColetivaKm / atletasAtivos.length).toFixed(1) }} km/atleta
+                <div class="text-3xs text-sm-caption text-medium-emphasis mt-1 text-truncate">
+                  Média: {{ (distanciaColetivaKm / atletasAtivos.length).toFixed(1) }} km
                 </div>
               </v-card-item>
             </v-card>
           </v-col>
 
-          <v-col cols="12" sm="6" md="4" lg="2">
-            <v-card class="glass-card kpi-card" elevation="0">
-              <v-card-item>
+          <v-col cols="6" sm="6" md="4" lg="2">
+            <v-card class="glass-card kpi-card h-100" elevation="0">
+              <v-card-item class="pa-2 pa-sm-4">
                 <div class="d-flex align-center justify-space-between">
-                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Ritmo Médio</div>
+                  <div class="text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold text-truncate">Ritmo Médio</div>
                   <v-tooltip text="Intensidade física média contínua da equipe em metros percorridos por minuto jogado (m/min)." location="top" max-width="300">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <div class="text-h4 font-weight-black mt-1 text-info">
+                <div class="text-h5 text-sm-h4 font-weight-black mt-1 text-info">
                   {{ mediaMetrosPorMinuto.toFixed(0) }} <span class="text-caption">m/min</span>
                 </div>
-                <div class="text-caption text-medium-emphasis mt-1">Ref. Elite: 100-125 m/min</div>
+                <div class="text-3xs text-sm-caption text-medium-emphasis mt-1 text-truncate">Ref: 100-125 m/min</div>
               </v-card-item>
             </v-card>
           </v-col>
 
-          <v-col cols="12" sm="6" md="4" lg="2">
-            <v-card class="glass-card kpi-card" elevation="0">
-              <v-card-item>
+          <v-col cols="6" sm="6" md="4" lg="2">
+            <v-card class="glass-card kpi-card h-100" elevation="0">
+              <v-card-item class="pa-2 pa-sm-4">
                 <div class="d-flex align-center justify-space-between">
-                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Pico Velocidade</div>
+                  <div class="text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold text-truncate">Pico Velocidade</div>
                   <v-tooltip text="Maior velocidade máxima absoluta registrada por um jogador do elenco na partida (em km/h)." location="top" max-width="300">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <div class="text-h4 font-weight-black mt-1 text-warning">
+                <div class="text-h5 text-sm-h4 font-weight-black mt-1 text-warning">
                   {{ maiorVelocidade.toFixed(1) }} <span class="text-caption">km/h</span>
                 </div>
-                <div class="text-caption text-medium-emphasis mt-1">
-                  Atleta veloz: #{{ atletaMaisRapido?.id || '-' }}
+                <div class="text-3xs text-sm-caption text-medium-emphasis mt-1 text-truncate">
+                  Top: #{{ atletaMaisRapido?.id || '-' }}
                 </div>
               </v-card-item>
             </v-card>
           </v-col>
 
-          <v-col cols="12" sm="6" md="4" lg="2">
-            <v-card class="glass-card kpi-card" elevation="0">
-              <v-card-item>
+          <v-col cols="6" sm="6" md="4" lg="2">
+            <v-card class="glass-card kpi-card h-100" elevation="0">
+              <v-card-item class="pa-2 pa-sm-4">
                 <div class="d-flex align-center justify-space-between">
-                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Sprints (&gt; 25.2)</div>
+                  <div class="text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold text-truncate">Sprints (&gt; 25.2)</div>
                   <v-tooltip text="Total de tiros explosivos em potência máxima (Zona 5 > 25.2 km/h) executados pelo time." location="top" max-width="300">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <div class="text-h4 font-weight-black mt-1 text-success">
+                <div class="text-h5 text-sm-h4 font-weight-black mt-1 text-success">
                   {{ totalSprintsPicos }}
                 </div>
-                <div class="text-caption text-medium-emphasis mt-1">Picos de alta explosão</div>
+                <div class="text-3xs text-sm-caption text-medium-emphasis mt-1 text-truncate">Picos de explosão</div>
               </v-card-item>
             </v-card>
           </v-col>
 
-          <v-col cols="12" sm="6" md="4" lg="2">
-            <v-card class="glass-card kpi-card" elevation="0">
-              <v-card-item>
+          <v-col cols="6" sm="6" md="4" lg="2">
+            <v-card class="glass-card kpi-card h-100" elevation="0">
+              <v-card-item class="pa-2 pa-sm-4">
                 <div class="d-flex align-center justify-space-between">
-                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">HSR (19.8-25.2)</div>
+                  <div class="text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold text-truncate">HSR (19.8-25.2)</div>
                   <v-tooltip text="Volume somado da equipe em corridas de alta velocidade entre 19.8 e 25.2 km/h (High-Speed Running)." location="top" max-width="300">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <div class="text-h4 font-weight-black mt-1 text-secondary">
+                <div class="text-h5 text-sm-h4 font-weight-black mt-1 text-secondary">
                   {{ (totalHSRMetros / 1000).toFixed(2) }} <span class="text-caption">km</span>
                 </div>
-                <div class="text-caption text-medium-emphasis mt-1">Volume Alta Intensidade</div>
+                <div class="text-3xs text-sm-caption text-medium-emphasis mt-1 text-truncate">Alta Intensidade</div>
               </v-card-item>
             </v-card>
           </v-col>
 
-          <v-col cols="12" sm="6" md="4" lg="2">
-            <v-card class="glass-card kpi-card" elevation="0">
-              <v-card-item>
+          <v-col cols="6" sm="6" md="4" lg="2">
+            <v-card class="glass-card kpi-card h-100" elevation="0">
+              <v-card-item class="pa-2 pa-sm-4">
                 <div class="d-flex align-center justify-space-between">
-                  <div class="text-caption text-medium-emphasis text-uppercase font-weight-bold">Frenagens (&lt; -2.5)</div>
+                  <div class="text-3xs text-sm-caption text-medium-emphasis text-uppercase font-weight-bold text-truncate">Frenagens (&lt; -2.5)</div>
                   <v-tooltip text="Total de desacelerações bruscas (≤ -2.5 m/s²), maior fonte de sobrecarga mecânica excêntrica nos isquiotibiais." location="top" max-width="300">
                     <template v-slot:activator="{ props }">
                       <v-icon v-bind="props" icon="mdi-help-circle-outline" size="13" class="hint-icon"></v-icon>
                     </template>
                   </v-tooltip>
                 </div>
-                <div class="text-h4 font-weight-black mt-1 text-error">
+                <div class="text-h5 text-sm-h4 font-weight-black mt-1 text-error">
                   {{ totalDesaceleracoesAltas }}
                 </div>
-                <div class="text-caption text-medium-emphasis mt-1">Críticas: {{ totalDesaceleracoesCriticas }}</div>
+                <div class="text-3xs text-sm-caption text-medium-emphasis mt-1 text-truncate">Críticas: {{ totalDesaceleracoesCriticas }}</div>
               </v-card-item>
             </v-card>
           </v-col>
@@ -818,97 +822,99 @@
             </div>
           </div>
 
-          <v-table hover class="bg-transparent table-custom">
-            <thead>
-              <tr>
-                <th class="text-left font-weight-bold">Atleta</th>
-                <th class="text-left font-weight-bold">Minutos</th>
-                <th class="text-left font-weight-bold">Distância (km)</th>
-                <th class="text-left font-weight-bold">m/min</th>
-                <th class="text-left font-weight-bold">HSR (19.8-25.2)</th>
-                <th class="text-left font-weight-bold">Sprints (&gt; 25.2)</th>
-                <th class="text-left font-weight-bold">ACWR (Gabbett)</th>
-                <th class="text-left font-weight-bold">Monotonia / Strain</th>
-                <th class="text-left font-weight-bold">Borg / Foster</th>
-                <th class="text-center font-weight-bold">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="a in elencoOrdenado"
-                :key="'rank-atleta-' + a.id"
-                :class="{ 'bg-surface-variant': String(a.id) === String(atletaAtivoId) }"
-              >
-                <td>
-                  <div class="d-flex align-center py-1">
-                    <v-avatar color="primary" size="28" class="mr-2 font-weight-bold text-caption">
-                      #{{ a.id }}
-                    </v-avatar>
-                    <div>
-                      <strong>Jogador #{{ a.id }}</strong>
-                      <div class="text-caption text-medium-emphasis">{{ a.posicaoSugerida }}</div>
+          <div class="table-responsive-wrapper">
+            <v-table hover class="bg-transparent table-custom">
+              <thead>
+                <tr>
+                  <th class="text-left font-weight-bold">Atleta</th>
+                  <th class="text-left font-weight-bold">Minutos</th>
+                  <th class="text-left font-weight-bold">Distância (km)</th>
+                  <th class="text-left font-weight-bold">m/min</th>
+                  <th class="text-left font-weight-bold">HSR (19.8-25.2)</th>
+                  <th class="text-left font-weight-bold">Sprints (&gt; 25.2)</th>
+                  <th class="text-left font-weight-bold">ACWR (Gabbett)</th>
+                  <th class="text-left font-weight-bold">Monotonia / Strain</th>
+                  <th class="text-left font-weight-bold">Borg / Foster</th>
+                  <th class="text-center font-weight-bold">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="a in elencoOrdenado"
+                  :key="'rank-atleta-' + a.id"
+                  :class="{ 'bg-surface-variant': String(a.id) === String(atletaAtivoId) }"
+                >
+                  <td>
+                    <div class="d-flex align-center py-1">
+                      <v-avatar color="primary" size="28" class="mr-2 font-weight-bold text-caption">
+                        #{{ a.id }}
+                      </v-avatar>
+                      <div>
+                        <strong>Jogador #{{ a.id }}</strong>
+                        <div class="text-caption text-medium-emphasis">{{ a.posicaoSugerida }}</div>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <v-chip size="x-small" variant="flat" color="surface-variant" class="font-weight-bold">
-                    {{ a.minutosJogados }} min
-                  </v-chip>
-                </td>
-                <td><strong>{{ (a.distanciaTotal / 1000).toFixed(2) }} km</strong></td>
-                <td>
-                  <v-chip size="x-small" variant="tonal" color="info" class="font-weight-bold">
-                    {{ a.metrosPorMinuto?.toFixed(0) }} m/min
-                  </v-chip>
-                </td>
-                <td class="text-secondary font-weight-medium">
-                  {{ a.distanciaZ4HSR }} m
-                </td>
-                <td class="text-warning font-weight-bold">
-                  {{ a.sprintsPicosContagem }} picos
-                </td>
-                <td>
-                  <v-chip
-                    size="small"
-                    :color="obterCorACWR(a.acwrRatio)"
-                    variant="flat"
-                    class="font-weight-bold"
-                  >
-                    {{ a.acwrRatio.toFixed(2) }} ({{ obterTextoCurtoACWR(a.acwrRatio) }})
-                  </v-chip>
-                </td>
-                <td class="text-caption">
-                  {{ a.monotonia.toFixed(2) }} / <span class="font-weight-bold">{{ a.strain }} U.A.</span>
-                </td>
-                <td>
-                  <v-chip size="x-small" :color="corBorg(a.escoreBorg)" variant="flat" class="font-weight-bold">
-                    PSE {{ a.escoreBorg }} ({{ a.escoreBorg * a.minutosJogados }} U.A.)
-                  </v-chip>
-                </td>
-                <td class="text-center">
-                  <v-btn
-                    size="x-small"
-                    color="primary"
-                    variant="tonal"
-                    prepend-icon="mdi-account-eye"
-                    @click="abrirAtletaEspecifico(a.id)"
-                    class="mr-1"
-                  >
-                    Atleta
-                  </v-btn>
-                  <v-btn
-                    size="x-small"
-                    color="info"
-                    variant="tonal"
-                    prepend-icon="mdi-file-chart"
-                    @click="abrirRelatorioAtleta(a.id)"
-                  >
-                    Dossiê
-                  </v-btn>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
+                  </td>
+                  <td>
+                    <v-chip size="x-small" variant="flat" color="surface-variant" class="font-weight-bold">
+                      {{ a.minutosJogados }} min
+                    </v-chip>
+                  </td>
+                  <td><strong>{{ (a.distanciaTotal / 1000).toFixed(2) }} km</strong></td>
+                  <td>
+                    <v-chip size="x-small" variant="tonal" color="info" class="font-weight-bold">
+                      {{ a.metrosPorMinuto?.toFixed(0) }} m/min
+                    </v-chip>
+                  </td>
+                  <td class="text-secondary font-weight-medium">
+                    {{ a.distanciaZ4HSR }} m
+                  </td>
+                  <td class="text-warning font-weight-bold">
+                    {{ a.sprintsPicosContagem }} picos
+                  </td>
+                  <td>
+                    <v-chip
+                      size="small"
+                      :color="obterCorACWR(a.acwrRatio)"
+                      variant="flat"
+                      class="font-weight-bold"
+                    >
+                      {{ a.acwrRatio.toFixed(2) }} ({{ obterTextoCurtoACWR(a.acwrRatio) }})
+                    </v-chip>
+                  </td>
+                  <td class="text-caption">
+                    {{ a.monotonia.toFixed(2) }} / <span class="font-weight-bold">{{ a.strain }} U.A.</span>
+                  </td>
+                  <td>
+                    <v-chip size="x-small" :color="corBorg(a.escoreBorg)" variant="flat" class="font-weight-bold">
+                      PSE {{ a.escoreBorg }} ({{ a.escoreBorg * a.minutosJogados }} U.A.)
+                    </v-chip>
+                  </td>
+                  <td class="text-center">
+                    <v-btn
+                      size="x-small"
+                      color="primary"
+                      variant="tonal"
+                      prepend-icon="mdi-account-eye"
+                      @click="abrirAtletaEspecifico(a.id)"
+                      class="mr-1"
+                    >
+                      Atleta
+                    </v-btn>
+                    <v-btn
+                      size="x-small"
+                      color="info"
+                      variant="tonal"
+                      prepend-icon="mdi-file-chart"
+                      @click="abrirRelatorioAtleta(a.id)"
+                    >
+                      Dossiê
+                    </v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </div>
         </v-card>
 
         <!-- 5. FORMAÇÃO TÁTICA COLETIVA & DIMENSÕES DO BLOCO -->
@@ -1769,106 +1775,110 @@
           </div>
 
           <!-- GRÁFICO DE BARRAS DE INTENSIDADE POR BLOCOS DE 15' -->
-          <div class="temporal-chart-container pa-4 rounded-lg mb-4">
-            <div class="d-flex justify-space-between align-center mb-3">
+          <div class="temporal-chart-container pa-3 pa-sm-4 rounded-lg mb-4">
+            <div class="d-flex flex-wrap justify-space-between align-center gap-2 mb-3">
               <span class="text-caption font-weight-bold text-slate-200">
                 <v-icon icon="mdi-speedometer" size="14" class="mr-1 text-primary"></v-icon>
                 Ritmo Relativo de Jogo (m/min) por Período de 15 Minutos
               </span>
               <span class="text-caption text-medium-emphasis">
-                Média Geral do Atleta: <strong class="text-primary">{{ ritmoNormalizadoMmin.toFixed(1) }} m/min</strong>
+                Média Geral: <strong class="text-primary">{{ ritmoNormalizadoMmin.toFixed(1) }} m/min</strong>
               </span>
             </div>
 
-            <!-- Colunas do Gráfico -->
-            <div class="temporal-bars-stage d-flex align-end justify-space-between gap-2">
-              <!-- Linha de Média da Partida -->
-              <div
-                class="average-reference-line"
-                :style="{ bottom: calcularAlturaBarraTemporal(ritmoNormalizadoMmin, maiorMminTemporal) + '%' }"
-              >
-                <span class="avg-line-label">Média Geral ({{ ritmoNormalizadoMmin.toFixed(0) }} m/min)</span>
-              </div>
+            <div class="temporal-scroll-wrapper">
+              <div class="temporal-stage-inner">
+                <!-- Colunas do Gráfico -->
+                <div class="temporal-bars-stage d-flex align-end justify-space-between gap-2">
+                  <!-- Linha de Média da Partida -->
+                  <div
+                    class="average-reference-line"
+                    :style="{ bottom: calcularAlturaBarraTemporal(ritmoNormalizadoMmin, maiorMminTemporal) + '%' }"
+                  >
+                    <span class="avg-line-label">Média Geral ({{ ritmoNormalizadoMmin.toFixed(0) }} m/min)</span>
+                  </div>
 
-              <!-- Barras de Cada Bloco -->
-              <div
-                v-for="bloco in analiseTemporalAtleta.blocosTemporais"
-                :key="'bloco-tmp-' + bloco.indice"
-                class="d-flex flex-column align-center flex-grow-1 h-100 justify-end"
-                style="z-index: 2; position: relative;"
-              >
-                <!-- Badges do Topo da Barra -->
-                <div class="mb-1 text-center" style="min-height: 28px;">
-                  <v-chip
-                    v-if="bloco.classificacao === 'pico'"
-                    size="x-small"
-                    color="primary"
-                    variant="flat"
-                    class="font-weight-black text-2xs px-1 mb-1"
+                  <!-- Barras de Cada Bloco -->
+                  <div
+                    v-for="bloco in analiseTemporalAtleta.blocosTemporais"
+                    :key="'bloco-tmp-' + bloco.indice"
+                    class="d-flex flex-column align-center flex-grow-1 h-100 justify-end"
+                    style="z-index: 2; position: relative;"
                   >
-                    🏆 PICO
-                  </v-chip>
-                  <v-chip
-                    v-else-if="bloco.classificacao === 'queda-severa'"
-                    size="x-small"
-                    color="error"
-                    variant="flat"
-                    class="font-weight-black text-2xs px-1 mb-1 pulse-chip"
-                  >
-                    🚨 {{ bloco.decaimentoPercentual }}%
-                  </v-chip>
-                  <v-chip
-                    v-else-if="bloco.classificacao === 'queda-moderada'"
-                    size="x-small"
-                    color="warning"
-                    variant="flat"
-                    class="font-weight-bold text-2xs px-1 mb-1"
-                  >
-                    ⚠️ {{ bloco.decaimentoPercentual }}%
-                  </v-chip>
-                  <div class="font-weight-black text-caption" :class="obterCorTextoMmin(bloco.classificacao)">
-                    {{ bloco.metrosPorMinuto > 0 ? bloco.metrosPorMinuto.toFixed(1) : '-' }}
+                    <!-- Badges do Topo da Barra -->
+                    <div class="mb-1 text-center" style="min-height: 28px;">
+                      <v-chip
+                        v-if="bloco.classificacao === 'pico'"
+                        size="x-small"
+                        color="primary"
+                        variant="flat"
+                        class="font-weight-black text-2xs px-1 mb-1"
+                      >
+                        🏆 PICO
+                      </v-chip>
+                      <v-chip
+                        v-else-if="bloco.classificacao === 'queda-severa'"
+                        size="x-small"
+                        color="error"
+                        variant="flat"
+                        class="font-weight-black text-2xs px-1 mb-1 pulse-chip"
+                      >
+                        🚨 {{ bloco.decaimentoPercentual }}%
+                      </v-chip>
+                      <v-chip
+                        v-else-if="bloco.classificacao === 'queda-moderada'"
+                        size="x-small"
+                        color="warning"
+                        variant="flat"
+                        class="font-weight-bold text-2xs px-1 mb-1"
+                      >
+                        ⚠️ {{ bloco.decaimentoPercentual }}%
+                      </v-chip>
+                      <div class="font-weight-black text-caption" :class="obterCorTextoMmin(bloco.classificacao)">
+                        {{ bloco.metrosPorMinuto > 0 ? bloco.metrosPorMinuto.toFixed(1) : '-' }}
+                      </div>
+                    </div>
+
+                    <!-- Barra Visual Estilizada -->
+                    <div
+                      class="temporal-bar-column rounded-t"
+                      :style="{
+                        height: bloco.distanciaTotal > 0 ? calcularAlturaBarraTemporal(bloco.metrosPorMinuto, maiorMminTemporal) + '%' : '4px',
+                        background: obterGradienteBarraTemporal(bloco.classificacao)
+                      }"
+                    ></div>
+
+                    <!-- Rótulo do Bloco & Detalhes -->
+                    <div class="text-center mt-2 w-100">
+                      <div class="font-weight-bold text-caption text-slate-200">{{ bloco.rotulo }}</div>
+                      <div class="text-3xs text-medium-emphasis">{{ bloco.distanciaTotal }}m</div>
+                      <div class="text-3xs" :class="bloco.distanciaHSR > 0 ? 'text-secondary' : 'text-slate-500'">
+                        HSR: {{ bloco.distanciaHSR }}m
+                      </div>
+                      <div class="text-3xs text-error font-weight-bold" v-if="bloco.sprintsContagem > 0">
+                        {{ bloco.sprintsContagem }} sprint{{ bloco.sprintsContagem > 1 ? 's' : '' }}
+                      </div>
+                      <div class="text-3xs text-slate-600" v-else>
+                        0 sprints
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Barra Visual Estilizada -->
-                <div
-                  class="temporal-bar-column rounded-t"
-                  :style="{
-                    height: bloco.distanciaTotal > 0 ? calcularAlturaBarraTemporal(bloco.metrosPorMinuto, maiorMminTemporal) + '%' : '4px',
-                    background: obterGradienteBarraTemporal(bloco.classificacao)
-                  }"
-                ></div>
-
-                <!-- Rótulo do Bloco & Detalhes -->
-                <div class="text-center mt-2 w-100">
-                  <div class="font-weight-bold text-caption text-slate-200">{{ bloco.rotulo }}</div>
-                  <div class="text-3xs text-medium-emphasis">{{ bloco.distanciaTotal }}m</div>
-                  <div class="text-3xs" :class="bloco.distanciaHSR > 0 ? 'text-secondary' : 'text-slate-500'">
-                    HSR: {{ bloco.distanciaHSR }}m
-                  </div>
-                  <div class="text-3xs text-error font-weight-bold" v-if="bloco.sprintsContagem > 0">
-                    {{ bloco.sprintsContagem }} sprint{{ bloco.sprintsContagem > 1 ? 's' : '' }}
-                  </div>
-                  <div class="text-3xs text-slate-600" v-else>
-                    0 sprints
-                  </div>
+                <!-- Divisória 1º Tempo / Intervalo / 2º Tempo -->
+                <div class="d-flex justify-space-between text-caption text-medium-emphasis border-t mt-3 pt-2">
+                  <span class="text-info font-weight-bold">◀ 1º TEMPO (0' a 45')</span>
+                  <span class="text-amber-400 font-weight-bold">INTERVALO</span>
+                  <span class="text-secondary font-weight-bold">2º TEMPO (45' a 90'+) ▶</span>
                 </div>
               </div>
-            </div>
-
-            <!-- Divisória 1º Tempo / Intervalo / 2º Tempo -->
-            <div class="d-flex justify-space-between text-caption text-medium-emphasis border-t mt-3 pt-2">
-              <span class="text-info font-weight-bold">◀ 1º TEMPO (0' a 45')</span>
-              <span class="text-amber-400 font-weight-bold">INTERVALO</span>
-              <span class="text-secondary font-weight-bold">2º TEMPO (45' a 90'+) ▶</span>
             </div>
           </div>
 
           <!-- COMPARATIVO 1º TEMPO VS 2º TEMPO & ALERTA DE FADIGA -->
           <v-row dense>
             <!-- 1ºT vs 2ºT: Volume & Ritmo -->
-            <v-col cols="12" md="3">
+            <v-col cols="12" sm="6" md="3">
               <v-card color="surface-variant" class="pa-3 text-center h-100" elevation="0">
                 <div class="text-caption text-medium-emphasis font-weight-bold d-flex align-center justify-center">
                   Distância Total (1ºT vs 2ºT)
@@ -1901,7 +1911,7 @@
             </v-col>
 
             <!-- 1ºT vs 2ºT: Intensidade Relativa (m/min) -->
-            <v-col cols="12" md="3">
+            <v-col cols="12" sm="6" md="3">
               <v-card color="surface-variant" class="pa-3 text-center h-100" elevation="0">
                 <div class="text-caption text-medium-emphasis font-weight-bold d-flex align-center justify-center">
                   Ritmo Relativo (m/min)
@@ -1934,7 +1944,7 @@
             </v-col>
 
             <!-- 1ºT vs 2ºT: Alta Intensidade (HSR + Sprints) -->
-            <v-col cols="12" md="3">
+            <v-col cols="12" sm="6" md="3">
               <v-card color="surface-variant" class="pa-3 text-center h-100" elevation="0">
                 <div class="text-caption text-medium-emphasis font-weight-bold d-flex align-center justify-center">
                   Alta Intensidade (HSR & Sprints)
@@ -1967,7 +1977,7 @@
             </v-col>
 
             <!-- Parecer da Comissão Técnica -->
-            <v-col cols="12" md="3">
+            <v-col cols="12" sm="6" md="3">
               <v-card
                 :color="analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'critico' ? 'rgba(217, 83, 79, 0.15)' : analiseTemporalAtleta.diagnosticoFadiga.gravidade === 'alerta' ? 'rgba(179, 140, 64, 0.15)' : 'rgba(46, 107, 102, 0.15)'"
                 class="pa-3 h-100 d-flex flex-column justify-center border"
@@ -2143,75 +2153,77 @@
             </v-tooltip>
           </div>
 
-          <v-table class="bg-transparent table-custom">
-            <thead>
-              <tr>
-                <th class="text-left font-weight-bold">Dimensão</th>
-                <th class="text-left font-weight-bold">Indicador / Métrica Chave</th>
-                <th class="text-left font-weight-bold">Valor Registrado</th>
-                <th class="text-left font-weight-bold">Classificação / Referência</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Carga Externa -->
-              <tr>
-                <td rowspan="4" class="font-weight-bold text-secondary bg-surface-darken-1">Carga Externa (Tracking)</td>
-                <td>Distância Total Percorrida</td>
-                <td><strong>{{ (atletaAtivo.distanciaTotal / 1000).toFixed(2) }} km</strong></td>
-                <td>Ritmo: {{ ritmoNormalizadoMmin.toFixed(0) }} m/min (Minutos: {{ minutosJogadosAtleta }} min)</td>
-              </tr>
-              <tr>
-                <td>Pico de Velocidade (Vmax)</td>
-                <td><strong>{{ atletaAtivo.velocidadeMaxima }} km/h</strong></td>
-                <td>Sprints &gt; 25.2 km/h: {{ atletaAtivo.sprintsPicosContagem }} picos ({{ atletaAtivo.distanciaZ5Sprint }} m)</td>
-              </tr>
-              <tr>
-                <td>Alta Intensidade (HSR 19.8 - 25.2 km/h)</td>
-                <td><strong>{{ atletaAtivo.distanciaZ4HSR }} m</strong></td>
-                <td>{{ percentuaisZonasAtleta.z4 }}% do volume acumulado</td>
-              </tr>
-              <tr>
-                <td>Dinâmica Neuromuscular (Frenagens)</td>
-                <td><strong>{{ atletaAtivo.desaceleracoesAltas }} frenagens</strong></td>
-                <td>Críticas (&lt; -3.0 m/s²): {{ atletaAtivo.desaceleracoesCriticas }}</td>
-              </tr>
+          <div class="table-responsive-wrapper">
+            <v-table class="bg-transparent table-custom">
+              <thead>
+                <tr>
+                  <th class="text-left font-weight-bold">Dimensão</th>
+                  <th class="text-left font-weight-bold">Indicador / Métrica Chave</th>
+                  <th class="text-left font-weight-bold">Valor Registrado</th>
+                  <th class="text-left font-weight-bold">Classificação / Referência</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Carga Externa -->
+                <tr>
+                  <td rowspan="4" class="font-weight-bold text-secondary bg-surface-darken-1">Carga Externa (Tracking)</td>
+                  <td>Distância Total Percorrida</td>
+                  <td><strong>{{ (atletaAtivo.distanciaTotal / 1000).toFixed(2) }} km</strong></td>
+                  <td>Ritmo: {{ ritmoNormalizadoMmin.toFixed(0) }} m/min (Minutos: {{ minutosJogadosAtleta }} min)</td>
+                </tr>
+                <tr>
+                  <td>Pico de Velocidade (Vmax)</td>
+                  <td><strong>{{ atletaAtivo.velocidadeMaxima }} km/h</strong></td>
+                  <td>Sprints &gt; 25.2 km/h: {{ atletaAtivo.sprintsPicosContagem }} picos ({{ atletaAtivo.distanciaZ5Sprint }} m)</td>
+                </tr>
+                <tr>
+                  <td>Alta Intensidade (HSR 19.8 - 25.2 km/h)</td>
+                  <td><strong>{{ atletaAtivo.distanciaZ4HSR }} m</strong></td>
+                  <td>{{ percentuaisZonasAtleta.z4 }}% do volume acumulado</td>
+                </tr>
+                <tr>
+                  <td>Dinâmica Neuromuscular (Frenagens)</td>
+                  <td><strong>{{ atletaAtivo.desaceleracoesAltas }} frenagens</strong></td>
+                  <td>Críticas (&lt; -3.0 m/s²): {{ atletaAtivo.desaceleracoesCriticas }}</td>
+                </tr>
 
-              <!-- Carga Interna -->
-              <tr>
-                <td rowspan="2" class="font-weight-bold text-error bg-surface-darken-1">Carga Interna (Borg)</td>
-                <td>Percepção Subjetiva de Esforço (PSE)</td>
-                <td><strong>Borg {{ valorBorg }} / 10</strong></td>
-                <td>{{ descricaoBorg(valorBorg) }}</td>
-              </tr>
-              <tr>
-                <td>Carga da Sessão (Método Foster)</td>
-                <td><strong>{{ cargaFosterUa }} U.A.</strong></td>
-                <td>PSE ({{ valorBorg }}) &times; Minutos ({{ minutosJogadosAtleta }} min)</td>
-              </tr>
+                <!-- Carga Interna -->
+                <tr>
+                  <td rowspan="2" class="font-weight-bold text-error bg-surface-darken-1">Carga Interna (Borg)</td>
+                  <td>Percepção Subjetiva de Esforço (PSE)</td>
+                  <td><strong>Borg {{ valorBorg }} / 10</strong></td>
+                  <td>{{ descricaoBorg(valorBorg) }}</td>
+                </tr>
+                <tr>
+                  <td>Carga da Sessão (Método Foster)</td>
+                  <td><strong>{{ cargaFosterUa }} U.A.</strong></td>
+                  <td>PSE ({{ valorBorg }}) &times; Minutos ({{ minutosJogadosAtleta }} min)</td>
+                </tr>
 
-              <!-- Índices Derivados -->
-              <tr>
-                <td rowspan="3" class="font-weight-bold text-info bg-surface-darken-1">Índices Integrados</td>
-                <td>Razão de Eficiência / Custo Fisiológico</td>
-                <td><strong>{{ razaoEficienciaTotal }} m/U.A.</strong></td>
-                <td>Eficiência HSR: {{ razaoEficienciaHSR }} m/U.A.</td>
-              </tr>
-              <tr>
-                <td>ACWR (Carga Aguda : Crônica)</td>
-                <td>
-                  <v-chip size="small" :color="obterCorACWR(atletaAtivo.acwrRatio)" class="font-weight-bold">
-                    {{ atletaAtivo.acwrRatio?.toFixed(2) }}
-                  </v-chip>
-                </td>
-                <td>{{ obterTextoCurtoACWR(atletaAtivo.acwrRatio) }}</td>
-              </tr>
-              <tr>
-                <td>Monotonia e Tensão (Strain)</td>
-                <td><strong>Monotonia: {{ atletaAtivo.monotonia.toFixed(2) }}</strong></td>
-                <td>Strain: {{ atletaAtivo.strain }} U.A. (Foster, 1998)</td>
-              </tr>
-            </tbody>
-          </v-table>
+                <!-- Índices Derivados -->
+                <tr>
+                  <td rowspan="3" class="font-weight-bold text-info bg-surface-darken-1">Índices Integrados</td>
+                  <td>Razão de Eficiência / Custo Fisiológico</td>
+                  <td><strong>{{ razaoEficienciaTotal }} m/U.A.</strong></td>
+                  <td>Eficiência HSR: {{ razaoEficienciaHSR }} m/U.A.</td>
+                </tr>
+                <tr>
+                  <td>ACWR (Carga Aguda : Crônica)</td>
+                  <td>
+                    <v-chip size="small" :color="obterCorACWR(atletaAtivo.acwrRatio)" class="font-weight-bold">
+                      {{ atletaAtivo.acwrRatio?.toFixed(2) }}
+                    </v-chip>
+                  </td>
+                  <td>{{ obterTextoCurtoACWR(atletaAtivo.acwrRatio) }}</td>
+                </tr>
+                <tr>
+                  <td>Monotonia e Tensão (Strain)</td>
+                  <td><strong>Monotonia: {{ atletaAtivo.monotonia.toFixed(2) }}</strong></td>
+                  <td>Strain: {{ atletaAtivo.strain }} U.A. (Foster, 1998)</td>
+                </tr>
+              </tbody>
+            </v-table>
+          </div>
 
           <!-- Parecer Preventivo do Dossiê -->
           <v-alert
@@ -2271,11 +2283,16 @@ function fazerLogout() {
 // =========================================================================
 // CONTROLE DE NAVEGAÇÃO & INTERFACE
 // =========================================================================
-const drawerAberto = ref(true)
+const drawerAberto = ref(!mobile.value)
 const railMode = ref(false)
 const menuAtivo = ref('comissao') // 'dados' | 'comissao' | 'atleta' | 'relatorio'
 const partidaAtivaId = ref('1')
 const atletaAtivoId = ref('2')
+
+// Atualiza o estado do menu automaticamente ao alternar entre mobile e desktop
+watch(mobile, (isMobile) => {
+  drawerAberto.value = !isMobile
+})
 
 function alternarDrawer() {
   drawerAberto.value = !drawerAberto.value
@@ -3875,6 +3892,17 @@ function carregarPartidasPadrao() {
   display: flex;
   justify-content: center;
   box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.6);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.soccer-pitch {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
 }
 
 .canvas-wrapper {
@@ -3882,13 +3910,17 @@ function carregarPartidasPadrao() {
   border-radius: 16px !important;
   border: 1px solid rgba(46, 107, 102, 0.35) !important;
   box-shadow: 0 14px 44px rgba(0, 0, 0, 0.7), 0 0 25px rgba(46, 107, 102, 0.12) !important;
-  overflow: hidden;
+  overflow-x: auto;
+  max-width: 100%;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .soccer-pitch-canvas {
   width: 100%;
-  max-width: 900px;
+  max-width: 100%;
   height: auto;
+  display: block;
   border-radius: 14px;
 }
 
@@ -3938,6 +3970,7 @@ function carregarPartidasPadrao() {
   background-color: #17212C !important;
   border-bottom: 1px solid rgba(232, 230, 223, 0.08) !important;
   padding: 12px 16px !important;
+  white-space: nowrap;
 }
 
 .table-custom td {
@@ -3946,6 +3979,7 @@ function carregarPartidasPadrao() {
   font-size: 0.85rem !important;
   transition: background 0.15s ease;
   color: #E8E6DF !important;
+  white-space: nowrap;
 }
 
 .table-custom tr:hover td {
@@ -3960,6 +3994,17 @@ function carregarPartidasPadrao() {
   border: 1px solid rgba(232, 230, 223, 0.075) !important;
   border-radius: 14px !important;
   box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.temporal-scroll-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.temporal-stage-inner {
+  min-width: 520px;
 }
 
 .temporal-bars-stage {
@@ -4053,7 +4098,29 @@ function carregarPartidasPadrao() {
   width: 100%;
   max-width: 380px;
   height: auto;
+  aspect-ratio: 1 / 1;
   filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.4));
+}
+
+/* Seletor Rápido de Partida na Topbar */
+.select-partida-wrapper {
+  min-width: 120px;
+  max-width: 160px;
+  flex-shrink: 1;
+}
+
+@media (min-width: 600px) {
+  .select-partida-wrapper {
+    min-width: 180px;
+    max-width: 240px;
+  }
+}
+
+@media (min-width: 960px) {
+  .select-partida-wrapper {
+    min-width: 220px;
+    max-width: 300px;
+  }
 }
 
 .select-partida-top :deep(.v-field__input) {
@@ -4078,6 +4145,30 @@ function carregarPartidasPadrao() {
 
 .text-3xs {
   font-size: 11px !important;
+}
+
+/* Ajustes Específicos para Mobile (< 600px) */
+@media (max-width: 600px) {
+  .main-viewport {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    padding-top: 10px !important;
+  }
+  .glass-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+  .kpi-card .text-h5 {
+    font-size: 1.25rem !important;
+  }
+  .radar-svg {
+    max-width: 280px;
+  }
+  .table-custom th,
+  .table-custom td {
+    padding: 8px 12px !important;
+    font-size: 0.80rem !important;
+  }
 }
 
 /* Regras para Impressão do Dossiê */

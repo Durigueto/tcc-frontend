@@ -3,7 +3,7 @@
     <!-- Fundo Tático Abstrato -->
     <div class="login-bg-overlay"></div>
 
-    <v-card class="login-card elevation-12 pa-6 pa-md-8 w-100" max-width="460">
+    <v-card class="login-card elevation-12 pa-4 pa-sm-6 pa-md-8 w-100" max-width="460">
       <!-- Cabeçalho: Apenas a Logo e o Slogan da aba "Análise de Desempenho no Futebol" -->
       <div class="text-center mb-6">
         <div class="logo-box mb-2 d-inline-block">

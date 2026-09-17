@@ -28,24 +28,42 @@ html, body {
   margin: 0;
   padding: 0;
   width: 100%;
+  max-width: 100vw;
   min-height: 100%;
   background-color: var(--color-navy);
   color: var(--color-ivory);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
+  position: relative;
 }
 
-#app {
+#app, .v-application {
   width: 100%;
+  max-width: 100vw;
   min-height: 100vh;
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
   background-color: var(--color-navy);
   color: var(--color-ivory);
+  overflow-x: hidden !important;
 }
+
+/* Envelopamento Responsivo para Tabelas de Dados */
+.table-responsive-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+
+.table-responsive-wrapper table {
+  min-width: 700px;
+}
+
 
 /* Tipografia Especializada */
 h1, h2, h3, .text-h4, .text-h5, .text-h6 {
