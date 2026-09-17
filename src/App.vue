@@ -1,207 +1,281 @@
 <template>
   <v-app class="app-background">
-    <!-- BARRA LATERAL (MENU PRINCIPAL) -->
-    <v-navigation-drawer
-      v-model="drawerAberto"
-      disable-resize-watcher
-      color="#0E151D"
-      width="270"
-      border
-      elevation="4"
-      class="sidebar-custom"
-    >
-      <!-- Header do Menu: Logo Oficial + Único Botão de Recolher (Setinha <) -->
-      <div class="sidebar-logo-container pa-3 border-b d-flex align-center justify-space-between">
-        <div class="d-flex align-center flex-grow-1 mr-2" style="min-width: 0;">
+    <!-- TELA DE AUTENTICAÇÃO / LOGIN (QUANDO NÃO LOGADO) -->
+    <TelaLogin v-if="!usuarioLogado" @login-sucesso="onLoginSucesso" />
+
+    <!-- AMBIENTE PRINCIPAL DO SISTEMA VISÃO 90 (QUANDO LOGADO) -->
+    <template v-else>
+      <!-- BARRA LATERAL (MENU PRINCIPAL) -->
+      <v-navigation-drawer
+        v-model="drawerAberto"
+        disable-resize-watcher
+        color="#0E151D"
+        width="270"
+        border
+        elevation="4"
+        class="sidebar-custom"
+      >
+        <!-- Header do Menu: Logo Oficial + Único Botão de Recolher (Setinha <) -->
+        <div class="sidebar-logo-container pa-3 border-b d-flex align-center justify-space-between">
+          <div class="d-flex align-center flex-grow-1 mr-2" style="min-width: 0;">
+            <img
+              src="/visao90-header.png"
+              alt="Visão 90"
+              class="sidebar-logo-img"
+            />
+          </div>
+
+          <!-- Único Botão de Esconder o Menu: Setinha < -->
+          <v-tooltip text="Esconder menu lateral" location="bottom">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-chevron-left"
+                size="small"
+                variant="text"
+                color="grey-lighten-1"
+                @click.stop="drawerAberto = false"
+              ></v-btn>
+            </template>
+          </v-tooltip>
+        </div>
+
+        <!-- Menu de Navegação em 4 Módulos Especializados do TCC -->
+        <v-list density="comfortable" nav class="pa-2 mt-1">
+          <!-- 1. Inserção de Dados -->
+          <v-list-item
+            value="dados"
+            :active="menuAtivo === 'dados'"
+            @click="selecionarMenu('dados')"
+            rounded="lg"
+            class="mb-2 nav-item-custom"
+            color="primary"
+          >
+            <template v-slot:prepend>
+              <v-icon icon="mdi-database-plus-outline" class="mr-2" color="primary"></v-icon>
+            </template>
+            <v-list-item-title class="font-weight-bold text-body-2">
+              Inserção de Dados
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
+              Upload CSV de Rastreamento
+            </v-list-item-subtitle>
+          </v-list-item>
+
+          <!-- 2. Painel da Comissão Técnica -->
+          <v-list-item
+            value="comissao"
+            :active="menuAtivo === 'comissao'"
+            @click="selecionarMenu('comissao')"
+            rounded="lg"
+            class="mb-2 nav-item-custom"
+            color="primary"
+          >
+            <template v-slot:prepend>
+              <v-icon icon="mdi-account-group-outline" class="mr-2" color="primary"></v-icon>
+            </template>
+            <v-list-item-title class="font-weight-bold text-body-2">
+              Painel da Comissão
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
+              Quadro do Elenco, Risco & ACWR
+            </v-list-item-subtitle>
+          </v-list-item>
+
+          <!-- 3. Painel do Atleta -->
+          <v-list-item
+            value="atleta"
+            :active="menuAtivo === 'atleta'"
+            @click="selecionarMenu('atleta')"
+            rounded="lg"
+            class="mb-2 nav-item-custom"
+            color="accent"
+          >
+            <template v-slot:prepend>
+              <v-icon icon="mdi-account-details-outline" class="mr-2" color="accent"></v-icon>
+            </template>
+            <v-list-item-title class="font-weight-bold text-body-2">
+              Painel do Atleta
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
+              Carga Individual & Minutagem
+            </v-list-item-subtitle>
+          </v-list-item>
+
+          <!-- 4. Relatório Pós-Jogo -->
+          <v-list-item
+            value="relatorio"
+            :active="menuAtivo === 'relatorio'"
+            @click="selecionarMenu('relatorio')"
+            rounded="lg"
+            class="mb-2 nav-item-custom"
+            color="secondary"
+          >
+            <template v-slot:prepend>
+              <v-icon icon="mdi-file-chart-outline" class="mr-2" color="secondary"></v-icon>
+            </template>
+            <v-list-item-title class="font-weight-bold text-body-2">
+              Relatório Pós-Jogo
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-caption text-medium-emphasis">
+              Dossiê, Heatmap Real & 5 Zonas
+            </v-list-item-subtitle>
+          </v-list-item>
+        </v-list>
+
+        <v-spacer></v-spacer>
+
+        <!-- Usuário Logado e Partida Ativa no Rodapé do Menu -->
+        <template v-slot:append>
+          <div class="pa-3 border-t" style="background: rgba(14, 21, 29, 0.95);">
+            <!-- Info Partida -->
+            <div class="d-flex align-center justify-space-between mb-1">
+              <span class="text-caption text-medium-emphasis">Partida Ativa:</span>
+              <v-chip size="x-small" color="primary" variant="flat" class="font-weight-bold">
+                ID #{{ partidaAtiva?.id || '0' }}
+              </v-chip>
+            </div>
+            <div class="text-caption text-truncate font-weight-medium text-slate-200 mb-3">
+              {{ partidaAtiva?.nome || 'Nenhuma selecionada' }}
+            </div>
+
+            <!-- Card do Usuário Logado & Botão Sair -->
+            <div v-if="usuarioLogado" class="user-sidebar-card pa-2 rounded-lg d-flex align-center justify-space-between border">
+              <div class="d-flex align-center gap-2 overflow-hidden mr-1">
+                <v-avatar size="30" :color="usuarioLogado.cor || 'secondary'" class="font-weight-bold text-caption text-ivory flex-shrink-0">
+                  {{ usuarioLogado.avatar || 'U' }}
+                </v-avatar>
+                <div class="overflow-hidden" style="line-height: 1.2;">
+                  <div class="text-caption font-weight-bold text-truncate text-slate-100">{{ usuarioLogado.nome }}</div>
+                  <div class="text-3xs text-gold text-truncate">{{ usuarioLogado.clube }}</div>
+                </div>
+              </div>
+
+              <v-tooltip text="Sair da Conta (Logout)" location="top">
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon="mdi-logout"
+                    size="x-small"
+                    variant="text"
+                    color="error"
+                    @click="fazerLogout"
+                  ></v-btn>
+                </template>
+              </v-tooltip>
+            </div>
+          </div>
+        </template>
+      </v-navigation-drawer>
+
+      <!-- TOP APP BAR -->
+      <v-app-bar color="transparent" elevation="0" height="64" class="topbar-custom">
+        <!-- Botão para reabrir o menu quando ele estiver recolhido -->
+        <v-tooltip text="Abrir menu lateral" location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-app-bar-nav-icon
+              v-if="!drawerAberto"
+              v-bind="props"
+              @click.stop="drawerAberto = true"
+              color="primary"
+              class="mr-1"
+            ></v-app-bar-nav-icon>
+          </template>
+        </v-tooltip>
+
+        <!-- Logo Oficial Visão 90 visível quando o menu estiver escondido -->
+        <div v-if="!drawerAberto" class="d-flex align-center mr-3 pl-1">
           <img
             src="/visao90-header.png"
             alt="Visão 90"
-            class="sidebar-logo-img"
+            style="height: 32px; width: auto; object-fit: contain;"
           />
+          <v-divider vertical class="mx-3 my-2"></v-divider>
         </div>
 
-        <!-- Único Botão de Esconder o Menu: Setinha < -->
-        <v-tooltip text="Esconder menu lateral" location="bottom">
+        <div class="d-flex align-center">
+          <h1 class="text-subtitle-1 text-sm-h6 font-weight-bold ml-1 mb-0">
+            {{ tituloSecaoAtiva }}
+          </h1>
+          <span class="text-caption text-medium-emphasis ml-3 d-none d-md-inline">
+            {{ subtituloSecaoAtiva }}
+          </span>
+        </div>
+
+        <v-spacer></v-spacer>
+
+        <!-- Seletor Rápido de Partida Ativa (sempre acessível no topo) -->
+        <div style="min-width: 200px; max-width: 300px;" class="mr-2 mr-sm-3">
+          <v-select
+            v-model="partidaAtivaId"
+            :items="partidas"
+            item-title="nome"
+            item-value="id"
+            label="Partida em Análise"
+            density="compact"
+            variant="outlined"
+            color="primary"
+            hide-details
+            prepend-inner-icon="mdi-shield-outline"
+            class="select-partida-top"
+            no-data-text="Nenhuma partida cadastrada"
+          ></v-select>
+        </div>
+
+        <!-- Atalho de Carregamento Rápido -->
+        <v-btn
+          v-if="partidas.length === 0"
+          color="primary"
+          variant="flat"
+          size="small"
+          prepend-icon="mdi-lightning-bolt"
+          @click="carregarPartidasPadrao"
+          class="font-weight-bold mr-2"
+        >
+          Carregar Dados
+        </v-btn>
+
+        <!-- Menu do Usuário no Topo -->
+        <v-menu v-if="usuarioLogado" location="bottom end">
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
-              icon="mdi-chevron-left"
+              variant="tonal"
+              color="secondary"
               size="small"
-              variant="text"
-              color="grey-lighten-1"
-              @click.stop="drawerAberto = false"
-            ></v-btn>
+              class="font-weight-bold d-flex align-center text-none px-2 mr-2"
+            >
+              <v-avatar size="22" :color="usuarioLogado.cor || 'secondary'" class="mr-1 text-3xs font-weight-bold text-ivory">
+                {{ usuarioLogado.avatar || 'U' }}
+              </v-avatar>
+              <span class="d-none d-sm-inline text-truncate" style="max-width: 130px;">
+                {{ usuarioLogado.nome }}
+              </span>
+              <v-icon icon="mdi-chevron-down" size="14" class="ml-1"></v-icon>
+            </v-btn>
           </template>
-        </v-tooltip>
-      </div>
-
-      <!-- Menu de Navegação em 4 Módulos Especializados do TCC -->
-      <v-list density="comfortable" nav class="pa-2 mt-1">
-        <!-- 1. Inserção de Dados -->
-        <v-list-item
-          value="dados"
-          :active="menuAtivo === 'dados'"
-          @click="selecionarMenu('dados')"
-          rounded="lg"
-          class="mb-2 nav-item-custom"
-          color="primary"
-        >
-          <template v-slot:prepend>
-            <v-icon icon="mdi-database-plus-outline" class="mr-2" color="primary"></v-icon>
-          </template>
-          <v-list-item-title class="font-weight-bold text-body-2">
-            Inserção de Dados
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-caption text-medium-emphasis">
-            Upload CSV de Rastreamento
-          </v-list-item-subtitle>
-        </v-list-item>
-
-        <!-- 2. Painel da Comissão Técnica -->
-        <v-list-item
-          value="comissao"
-          :active="menuAtivo === 'comissao'"
-          @click="selecionarMenu('comissao')"
-          rounded="lg"
-          class="mb-2 nav-item-custom"
-          color="primary"
-        >
-          <template v-slot:prepend>
-            <v-icon icon="mdi-account-group-outline" class="mr-2" color="primary"></v-icon>
-          </template>
-          <v-list-item-title class="font-weight-bold text-body-2">
-            Painel da Comissão
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-caption text-medium-emphasis">
-            Quadro do Elenco, Risco & ACWR
-          </v-list-item-subtitle>
-        </v-list-item>
-
-        <!-- 3. Painel do Atleta -->
-        <v-list-item
-          value="atleta"
-          :active="menuAtivo === 'atleta'"
-          @click="selecionarMenu('atleta')"
-          rounded="lg"
-          class="mb-2 nav-item-custom"
-          color="accent"
-        >
-          <template v-slot:prepend>
-            <v-icon icon="mdi-account-details-outline" class="mr-2" color="accent"></v-icon>
-          </template>
-          <v-list-item-title class="font-weight-bold text-body-2">
-            Painel do Atleta
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-caption text-medium-emphasis">
-            Carga Individual & Minutagem
-          </v-list-item-subtitle>
-        </v-list-item>
-
-        <!-- 4. Relatório Pós-Jogo -->
-        <v-list-item
-          value="relatorio"
-          :active="menuAtivo === 'relatorio'"
-          @click="selecionarMenu('relatorio')"
-          rounded="lg"
-          class="mb-2 nav-item-custom"
-          color="secondary"
-        >
-          <template v-slot:prepend>
-            <v-icon icon="mdi-file-chart-outline" class="mr-2" color="secondary"></v-icon>
-          </template>
-          <v-list-item-title class="font-weight-bold text-body-2">
-            Relatório Pós-Jogo
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-caption text-medium-emphasis">
-            Dossiê, Heatmap Real & 5 Zonas
-          </v-list-item-subtitle>
-        </v-list-item>
-      </v-list>
-
-      <v-spacer></v-spacer>
-
-      <!-- Status do Sistema no Rodapé do Menu (Limpo, sem badges redundantes ou botões extras) -->
-      <template v-slot:append>
-        <div class="pa-3 border-t" style="background: rgba(14, 21, 29, 0.9);">
-          <div class="d-flex align-center justify-space-between mb-1">
-            <span class="text-caption text-medium-emphasis">Partida Ativa:</span>
-            <v-chip size="x-small" color="primary" variant="flat" class="font-weight-bold">
-              ID #{{ partidaAtiva.id }}
-            </v-chip>
-          </div>
-          <div class="text-caption text-truncate font-weight-medium text-slate-200">
-            {{ partidaAtiva.nome }}
-          </div>
-        </div>
-      </template>
-    </v-navigation-drawer>
-
-    <!-- TOP APP BAR -->
-    <v-app-bar color="transparent" elevation="0" height="64" class="topbar-custom">
-      <!-- Botão para reabrir o menu quando ele estiver recolhido -->
-      <v-tooltip text="Abrir menu lateral" location="bottom">
-        <template v-slot:activator="{ props }">
-          <v-app-bar-nav-icon
-            v-if="!drawerAberto"
-            v-bind="props"
-            @click.stop="drawerAberto = true"
-            color="primary"
-            class="mr-1"
-          ></v-app-bar-nav-icon>
-        </template>
-      </v-tooltip>
-
-      <!-- Logo Oficial Visão 90 visível quando o menu estiver escondido -->
-      <div v-if="!drawerAberto" class="d-flex align-center mr-3 pl-1">
-        <img
-          src="/visao90-header.png"
-          alt="Visão 90"
-          style="height: 32px; width: auto; object-fit: contain;"
-        />
-        <v-divider vertical class="mx-3 my-2"></v-divider>
-      </div>
-
-      <div class="d-flex align-center">
-        <h1 class="text-subtitle-1 text-sm-h6 font-weight-bold ml-1 mb-0">
-          {{ tituloSecaoAtiva }}
-        </h1>
-        <span class="text-caption text-medium-emphasis ml-3 d-none d-md-inline">
-          {{ subtituloSecaoAtiva }}
-        </span>
-      </div>
-
-      <v-spacer></v-spacer>
-
-      <!-- Seletor Rápido de Partida Ativa (sempre acessível no topo) -->
-      <div style="min-width: 220px; max-width: 320px;" class="mr-2 mr-sm-4">
-        <v-select
-          v-model="partidaAtivaId"
-          :items="partidas"
-          item-title="nome"
-          item-value="id"
-          label="Partida em Análise"
-          density="compact"
-          variant="outlined"
-          color="primary"
-          hide-details
-          prepend-inner-icon="mdi-shield-outline"
-          class="select-partida-top"
-        ></v-select>
-      </div>
-
-      <!-- Atalho de Carregamento Rápido -->
-      <v-btn
-        v-if="partidas.length === 0"
-        color="primary"
-        variant="flat"
-        size="small"
-        prepend-icon="mdi-lightning-bolt"
-        @click="carregarPartidasPadrao"
-        class="font-weight-bold mr-2"
-      >
-        Carregar Dados
-      </v-btn>
-    </v-app-bar>
+          <v-card color="#1B2530" border class="pa-2 rounded-lg" min-width="230" elevation="8">
+            <div class="pa-2">
+              <div class="font-weight-bold text-body-2 text-ivory">{{ usuarioLogado.nome }}</div>
+              <div class="text-caption text-gold font-weight-medium">{{ usuarioLogado.cargo }}</div>
+              <div class="text-caption text-slate-300">{{ usuarioLogado.clube }}</div>
+              <div class="text-3xs text-slate-500 mt-1">{{ usuarioLogado.email }}</div>
+            </div>
+            <v-divider class="my-2"></v-divider>
+            <v-btn
+              color="error"
+              variant="tonal"
+              block
+              size="small"
+              prepend-icon="mdi-logout"
+              class="font-weight-bold text-none"
+              @click="fazerLogout"
+            >
+              Sair da Conta
+            </v-btn>
+          </v-card>
+        </v-menu>
+      </v-app-bar>
 
     <!-- CONTEÚDO PRINCIPAL (RENDERIZAÇÃO DOS 4 MÓDULOS) -->
     <v-main class="app-main-layout">
@@ -381,15 +455,38 @@
                   {{ calcularTotalSprintsPicos(p.atletas) }}
                 </td>
                 <td class="text-center">
-                  <v-btn
-                    size="small"
-                    :color="p.id === partidaAtivaId ? 'success' : 'primary'"
-                    :variant="p.id === partidaAtivaId ? 'flat' : 'outlined'"
-                    @click="selecionarPartida(p.id)"
-                    class="font-weight-bold"
-                  >
-                    {{ p.id === partidaAtivaId ? 'Ativa' : 'Selecionar' }}
-                  </v-btn>
+                  <div class="d-flex align-center justify-center gap-1">
+                    <v-btn
+                      size="small"
+                      :color="p.id === partidaAtivaId ? 'success' : 'primary'"
+                      :variant="p.id === partidaAtivaId ? 'flat' : 'outlined'"
+                      @click="selecionarPartida(p.id)"
+                      class="font-weight-bold"
+                    >
+                      {{ p.id === partidaAtivaId ? 'Ativa' : 'Selecionar' }}
+                    </v-btn>
+                    <v-tooltip text="Excluir partida do seu repositório" location="top">
+                      <template v-slot:activator="{ props }">
+                        <v-btn
+                          v-bind="props"
+                          icon="mdi-trash-can-outline"
+                          size="small"
+                          variant="text"
+                          color="error"
+                          @click.stop="excluirPartida(p.id)"
+                        ></v-btn>
+                      </template>
+                    </v-tooltip>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Estado Vazio quando não houver partidas cadastradas -->
+              <tr v-if="partidas.length === 0">
+                <td colspan="7" class="text-center py-8 text-slate-400">
+                  <v-icon icon="mdi-folder-open-outline" size="36" class="mb-2 d-block mx-auto text-slate-500"></v-icon>
+                  <div class="font-weight-bold text-body-2 text-slate-300">Nenhuma partida importada para esta conta</div>
+                  <div class="text-caption text-slate-500 mt-1">Importe um arquivo CSV no formulário acima ou clique no botão "Recarregar Demonstração".</div>
                 </td>
               </tr>
             </tbody>
@@ -2137,14 +2234,39 @@
       </div>
       </div>
     </v-main>
+    </template>
   </v-app>
 </template>
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useDisplay } from 'vuetify'
+import TelaLogin from './components/TelaLogin.vue'
+import { authService } from './services/authService'
 
 const { mobile } = useDisplay()
+
+// =========================================================================
+// SESSÃO, USUÁRIO LOGADO & AUTENTICAÇÃO
+// =========================================================================
+const usuarioLogado = ref(authService.obterSessaoAtiva())
+
+function onLoginSucesso(usuario) {
+  usuarioLogado.value = usuario
+  recarregarPartidasDoUsuario()
+  menuAtivo.value = 'comissao'
+  mensagemAlerta.value = `Conectado com sucesso como ${usuario.nome} (${usuario.clube}). Repositório de dados isolado ativado!`
+  tipoAlerta.value = 'success'
+}
+
+function fazerLogout() {
+  authService.fazerLogout()
+  usuarioLogado.value = null
+  partidas.value = []
+  partidaAtivaId.value = ''
+  mensagemAlerta.value = 'Sessão encerrada com sucesso.'
+  tipoAlerta.value = 'info'
+}
 
 // =========================================================================
 // CONTROLE DE NAVEGAÇÃO & INTERFACE
@@ -2574,38 +2696,44 @@ function criarAtletasPartida(adversario, fatorCarga = 1.0) {
   ]
 }
 
-const partidas = ref([
-  {
-    id: '1',
-    nome: 'Campeonato Oficial - Rodada 4 (vs Santos FC)',
-    adversario: 'Santos FC',
-    data: '07/09/2026',
-    duracao: 90,
-    placar: '2 x 1 (Vitória Mandante)',
-    atletas: criarAtletasPartida('Santos FC', 1.0)
-  },
-  {
-    id: '2',
-    nome: 'Campeonato Oficial - Rodada 3 (vs Palmeiras)',
-    adversario: 'Palmeiras',
-    data: '31/08/2026',
-    duracao: 90,
-    placar: '1 x 1 (Empate Fora)',
-    atletas: criarAtletasPartida('Palmeiras', 1.05)
-  },
-  {
-    id: '3',
-    nome: 'Campeonato Oficial - Rodada 2 (vs Corinthians)',
-    adversario: 'Corinthians',
-    data: '24/08/2026',
-    duracao: 90,
-    placar: '3 x 0 (Vitória Mandante)',
-    atletas: criarAtletasPartida('Corinthians', 0.96)
-  }
-])
+const partidas = ref([])
 
-// Computeds da Partida Ativa & Atletas
+function recarregarPartidasDoUsuario() {
+  if (!usuarioLogado.value) {
+    partidas.value = []
+    partidaAtivaId.value = ''
+    return
+  }
+  const lista = authService.obterPartidasDoUsuario(usuarioLogado.value.id, criarAtletasPartida)
+  partidas.value = lista || []
+  if (partidas.value.length > 0) {
+    const existe = partidas.value.some(p => p.id === partidaAtivaId.value)
+    if (!existe) {
+      partidaAtivaId.value = partidas.value[0].id
+    }
+  } else {
+    partidaAtivaId.value = ''
+  }
+}
+
+// Inicializa as partidas na montagem se o usuário já estiver com sessão salva
+if (usuarioLogado.value) {
+  recarregarPartidasDoUsuario()
+}
+
+// Computeds da Partida Ativa & Atletas com proteção para listas vazias
 const partidaAtiva = computed(() => {
+  if (!partidas.value || partidas.value.length === 0) {
+    return {
+      id: '0',
+      nome: 'Nenhuma partida cadastrada',
+      adversario: '-',
+      data: '-',
+      duracao: 0,
+      placar: '-',
+      atletas: []
+    }
+  }
   return partidas.value.find(p => p.id === partidaAtivaId.value) || partidas.value[0]
 })
 
@@ -3511,17 +3639,85 @@ function calcularTotalSprintsPicos(atletas) {
 }
 
 function processarUploadArquivo() {
+  if (!usuarioLogado.value) return
   carregando.value = true
+
+  const nomePartida = nomeNovaPartida.value?.trim() || (arquivoUpload.value ? arquivoUpload.value.name.replace(/\.[^/.]+$/, '') : 'Novo Confronto de Rastreamento')
+
   setTimeout(() => {
     carregando.value = false
-    mensagemAlerta.value = 'Arquivo CSV 25 Hz processado com sucesso! Métricas cinemáticas integradas aos 4 painéis.'
+
+    // Cria um novo confronto com métricas calculadas e atletas
+    const novaPartida = {
+      id: 'partida_' + Date.now(),
+      nome: nomePartida,
+      adversario: 'Adversário Registrado',
+      data: new Date().toLocaleDateString('pt-BR'),
+      duracao: 90,
+      placar: '0 x 0 (Em Análise)',
+      atletas: criarAtletasPartida('Adversário', 1.02)
+    }
+
+    partidas.value.unshift(novaPartida)
+    authService.salvarPartidasDoUsuario(usuarioLogado.value.id, partidas.value)
+    partidaAtivaId.value = novaPartida.id
+
+    // Limpa campos do formulário
+    arquivoUpload.value = null
+    nomeNovaPartida.value = ''
+
+    mensagemAlerta.value = `Arquivo CSV processado e salvo com exclusividade para ${usuarioLogado.value.nome} (${usuarioLogado.value.clube})!`
     tipoAlerta.value = 'success'
     menuAtivo.value = 'comissao'
   }, 1200)
 }
 
+function excluirPartida(partidaId) {
+  if (!usuarioLogado.value) return
+  partidas.value = authService.excluirPartidaDoUsuario(usuarioLogado.value.id, partidaId)
+  if (partidaAtivaId.value === partidaId) {
+    partidaAtivaId.value = partidas.value.length > 0 ? partidas.value[0].id : ''
+  }
+  mensagemAlerta.value = 'Partida excluída do seu repositório com sucesso!'
+  tipoAlerta.value = 'info'
+}
+
 function carregarPartidasPadrao() {
-  mensagemAlerta.value = 'Demonstração de 3 partidas recarregada com sucesso!'
+  if (!usuarioLogado.value) return
+  const clubeNome = usuarioLogado.value.clube || 'Equipe'
+  const partidasDemonstracao = [
+    {
+      id: 'p_demo_1',
+      nome: `Campeonato Oficial - Rodada 4 (${clubeNome} x Santos FC)`,
+      adversario: 'Santos FC',
+      data: '07/09/2026',
+      duracao: 90,
+      placar: '2 x 1 (Vitória Mandante)',
+      atletas: criarAtletasPartida('Santos FC', 1.0)
+    },
+    {
+      id: 'p_demo_2',
+      nome: `Campeonato Oficial - Rodada 3 (${clubeNome} x Palmeiras)`,
+      adversario: 'Palmeiras',
+      data: '31/08/2026',
+      duracao: 90,
+      placar: '1 x 1 (Empate Fora)',
+      atletas: criarAtletasPartida('Palmeiras', 1.05)
+    },
+    {
+      id: 'p_demo_3',
+      nome: `Campeonato Oficial - Rodada 2 (${clubeNome} x Corinthians)`,
+      adversario: 'Corinthians',
+      data: '24/08/2026',
+      duracao: 90,
+      placar: '3 x 0 (Vitória Mandante)',
+      atletas: criarAtletasPartida('Corinthians', 0.96)
+    }
+  ]
+  partidas.value = partidasDemonstracao
+  authService.salvarPartidasDoUsuario(usuarioLogado.value.id, partidasDemonstracao)
+  partidaAtivaId.value = partidasDemonstracao[0].id
+  mensagemAlerta.value = `Demonstração de 3 partidas carregada para ${usuarioLogado.value.nome} (${usuarioLogado.value.clube})!`
   tipoAlerta.value = 'info'
 }
 </script>
@@ -3864,6 +4060,24 @@ function carregarPartidasPadrao() {
   font-size: 0.85rem;
   font-weight: 600;
   color: #E8E6DF;
+}
+
+/* Card do Usuário Logado no Menu Lateral */
+.user-sidebar-card {
+  background: rgba(16, 24, 32, 0.7);
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.text-ivory {
+  color: #E8E6DF !important;
+}
+
+.text-gold {
+  color: #B38C40 !important;
+}
+
+.text-3xs {
+  font-size: 11px !important;
 }
 
 /* Regras para Impressão do Dossiê */
