@@ -7,82 +7,62 @@ const CHAVE_SESSAO = 'visao90_sessao_ativa'
 const CHAVE_USUARIOS = 'visao90_usuarios_cadastrados'
 const PREFIXO_PARTIDAS = 'visao90_partidas_'
 
-export const USUARIOS_DEMO = [
-  {
-    id: 'usr_carlos',
-    nome: 'Dr. Carlos Silva',
-    email: 'carlos@santosfc.com.br',
-    senha: '123',
-    cargo: 'Fisiologista Chefe',
-    clube: 'Santos FC',
-    avatar: 'CS',
-    cor: '#1B2530',
-    descricao: 'Acesso com 2 partidas oficiais do Santos FC cadastradas.',
-    partidasIniciaisMeta: [
-      {
-        id: 'carlos_p1',
-        nome: 'Campeonato Paulista - Rodada 4 (Santos FC x Palmeiras)',
-        adversario: 'Palmeiras',
-        data: '07/09/2026',
-        duracao: 90,
-        placar: '2 x 1 (Vitória Mandante)',
-        fator: 1.0
-      },
-      {
-        id: 'carlos_p2',
-        nome: 'Amistoso de Intertemporada - Santos FC x Grêmio',
-        adversario: 'Grêmio',
-        data: '14/09/2026',
-        duracao: 90,
-        placar: '1 x 0 (Vitória Mandante)',
-        fator: 0.94
-      }
-    ]
-  },
-  {
-    id: 'usr_marcos',
-    nome: 'Prof. Marcos Lima',
-    email: 'marcos@palmeiras.com.br',
-    senha: '123',
-    cargo: 'Preparador Físico',
-    clube: 'SE Palmeiras',
-    avatar: 'ML',
-    cor: '#2E6B66',
-    descricao: 'Acesso com 1 partida do Palmeiras cadastrada.',
-    partidasIniciaisMeta: [
-      {
-        id: 'marcos_p1',
-        nome: 'Campeonato Brasileiro - Rodada 12 (Palmeiras x Corinthians)',
-        adversario: 'Corinthians',
-        data: '31/08/2026',
-        duracao: 90,
-        placar: '1 x 1 (Empate Fora)',
-        fator: 1.06
-      }
-    ]
-  },
-  {
-    id: 'usr_convidado',
-    nome: 'Avaliador da Banca',
-    email: 'banca@tcc.com.br',
-    senha: '123',
-    cargo: 'Membro da Banca Examinadora',
-    clube: 'Avaliação Acadêmica TCC',
-    avatar: 'BT',
-    cor: '#B38C40',
-    descricao: 'Conta nova vazia (0 partidas) para testar a importação de CSV do zero.',
-    partidasIniciaisMeta: []
-  }
-]
+// Usuário padrão principal com todas as 3 partidas oficiais centralizadas
+export const USUARIO_PADRAO = {
+  id: 'usr_joaopedro',
+  nome: 'João Pedro Dias',
+  email: 'joaopedrodias895@gmail.com',
+  senha: '123',
+  cargo: 'Fisiologista / Analista de Desempenho',
+  clube: 'Comissão Técnica',
+  avatar: 'JP',
+  cor: '#2E6B66',
+  partidasIniciaisMeta: [
+    {
+      id: '1',
+      nome: 'Campeonato Oficial - Rodada 4 (vs Santos FC)',
+      adversario: 'Santos FC',
+      data: '07/09/2026',
+      duracao: 90,
+      placar: '2 x 1 (Vitória Mandante)',
+      fator: 1.0
+    },
+    {
+      id: '2',
+      nome: 'Campeonato Oficial - Rodada 3 (vs Palmeiras)',
+      adversario: 'Palmeiras',
+      data: '31/08/2026',
+      duracao: 90,
+      placar: '1 x 1 (Empate Fora)',
+      fator: 1.05
+    },
+    {
+      id: '3',
+      nome: 'Campeonato Oficial - Rodada 2 (vs Corinthians)',
+      adversario: 'Corinthians',
+      data: '24/08/2026',
+      duracao: 90,
+      placar: '3 x 0 (Vitória Mandante)',
+      fator: 0.96
+    }
+  ]
+}
 
 export const authService = {
-  // Inicializa o banco local de usuários com os perfis de demo caso ainda não existam
+  // Inicializa o banco local de usuários garantindo a conta principal
   inicializarUsuarios() {
     try {
-      const cadastrados = localStorage.getItem(CHAVE_USUARIOS)
-      if (!cadastrados) {
-        localStorage.setItem(CHAVE_USUARIOS, JSON.stringify(USUARIOS_DEMO))
+      const cadastradosStr = localStorage.getItem(CHAVE_USUARIOS)
+      let cadastrados = cadastradosStr ? JSON.parse(cadastradosStr) : []
+
+      // Garante que o usuário joaopedrodias895@gmail.com sempre exista e esteja atualizado
+      const index = cadastrados.findIndex(u => u.email === USUARIO_PADRAO.email)
+      if (index === -1) {
+        cadastrados.unshift(USUARIO_PADRAO)
+      } else {
+        cadastrados[index] = { ...cadastrados[index], ...USUARIO_PADRAO }
       }
+      localStorage.setItem(CHAVE_USUARIOS, JSON.stringify(cadastrados))
     } catch (e) {
       console.warn('Erro ao inicializar localStorage de usuários:', e)
     }
@@ -126,9 +106,9 @@ export const authService = {
     try {
       this.inicializarUsuarios()
       const data = localStorage.getItem(CHAVE_USUARIOS)
-      return data ? JSON.parse(data) : USUARIOS_DEMO
+      return data ? JSON.parse(data) : [USUARIO_PADRAO]
     } catch (e) {
-      return USUARIOS_DEMO
+      return [USUARIO_PADRAO]
     }
   },
 
@@ -139,7 +119,7 @@ export const authService = {
     const emailNormalizado = email.trim().toLowerCase()
 
     const usuario = usuarios.find(
-      u => u.email.trim().toLowerCase() === emailNormalizado && u.senha === senha
+      u => u.email.trim().toLowerCase() === emailNormalizado && String(u.senha) === String(senha)
     )
 
     if (!usuario) {
@@ -156,18 +136,7 @@ export const authService = {
     }
   },
 
-  // Acesso rápido por Perfil de Demonstração (Facilita a Banca do TCC)
-  fazerLoginDemo(idUsuarioDemo) {
-    this.inicializarUsuarios()
-    const usuario = USUARIOS_DEMO.find(u => u.id === idUsuarioDemo) || USUARIOS_DEMO[0]
-    const sessao = this.salvarSessao(usuario)
-    return {
-      sucesso: true,
-      usuario: sessao
-    }
-  },
-
-  // Cadastro de nova conta
+  // Cadastro de nova conta independente
   cadastrarUsuario({ nome, email, senha, cargo, clube }) {
     this.inicializarUsuarios()
     const usuarios = this.obterTodosUsuarios()
@@ -193,7 +162,7 @@ export const authService = {
       email: emailNormalizado,
       senha: senha,
       cargo: cargo?.trim() || 'Fisiologista / Analista',
-      clube: clube?.trim() || 'Clube Independente',
+      clube: clube?.trim() || 'Comissão Técnica',
       avatar: iniciais,
       cor: '#2E6B66',
       partidasIniciaisMeta: []
@@ -202,7 +171,7 @@ export const authService = {
     usuarios.push(novoUsuario)
     localStorage.setItem(CHAVE_USUARIOS, JSON.stringify(usuarios))
 
-    // Inicia com lista de partidas vazia para o novo usuário
+    // Inicia com lista de partidas vazia para a nova conta
     this.salvarPartidasDoUsuario(novoUsuario.id, [])
 
     const sessao = this.salvarSessao(novoUsuario)
@@ -219,13 +188,27 @@ export const authService = {
       const partidasSalvas = localStorage.getItem(chave)
 
       if (partidasSalvas) {
-        return JSON.parse(partidasSalvas)
+        const parsed = JSON.parse(partidasSalvas)
+        // Se a conta for do João Pedro e por acaso estiver vazia no storage, re-popula com as 3 partidas
+        if (usuarioId === USUARIO_PADRAO.id && (!parsed || parsed.length === 0)) {
+          const partidasSemente = USUARIO_PADRAO.partidasIniciaisMeta.map(meta => ({
+            id: meta.id,
+            nome: meta.nome,
+            adversario: meta.adversario,
+            data: meta.data,
+            duracao: meta.duracao,
+            placar: meta.placar,
+            atletas: geradorAtletasCallback ? geradorAtletasCallback(meta.adversario, meta.fator) : []
+          }))
+          localStorage.setItem(chave, JSON.stringify(partidasSemente))
+          return partidasSemente
+        }
+        return parsed
       }
 
-      // Se não há partidas salvas ainda, verifica se é um usuário demo com dados semente
-      const usuarioDemo = USUARIOS_DEMO.find(u => u.id === usuarioId)
-      if (usuarioDemo && usuarioDemo.partidasIniciaisMeta && usuarioDemo.partidasIniciaisMeta.length > 0) {
-        const partidasSemente = usuarioDemo.partidasIniciaisMeta.map(meta => ({
+      // Se não há partidas salvas ainda, verifica se é o usuário principal
+      if (usuarioId === USUARIO_PADRAO.id && USUARIO_PADRAO.partidasIniciaisMeta) {
+        const partidasSemente = USUARIO_PADRAO.partidasIniciaisMeta.map(meta => ({
           id: meta.id,
           nome: meta.nome,
           adversario: meta.adversario,
