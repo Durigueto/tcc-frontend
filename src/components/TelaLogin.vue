@@ -51,7 +51,7 @@
           <v-text-field
             v-model="emailLogin"
             label="E-mail"
-            placeholder="joaopedrodias895@gmail.com"
+            placeholder="seu.email@exemplo.com"
             prepend-inner-icon="mdi-email-outline"
             variant="outlined"
             density="comfortable"
@@ -223,16 +223,16 @@
 
 <script setup>
 import { ref } from 'vue'
-import { authService, USUARIO_PADRAO } from '@/services/authService'
+import { authService } from '@/services/authService'
 
 const emit = defineEmits(['login-sucesso'])
 
 // Alternância entre Login e Cadastro
 const modoCadastro = ref(false)
 
-// Estado do Login (Centralizado na conta do usuário solicitada)
-const emailLogin = ref(USUARIO_PADRAO.email)
-const senhaLogin = ref(USUARIO_PADRAO.senha)
+// Estado do Login (Inicia completamente vazio por seguranca em qualquer aparelho)
+const emailLogin = ref('')
+const senhaLogin = ref('')
 const mostrarSenhaLogin = ref(false)
 
 // Estado do Cadastro
