@@ -1,82 +1,54 @@
 # Visão 90: Front-end da Aplicação
 
-Módulo de interface com o usuário da plataforma **Visão 90**, desenvolvido como parte do Trabalho de Conclusão de Curso (TCC) em Ciência da Computação por João Pedro Dias, sob orientação do Prof. Me. Kenedy Antônio Freitas.
+> **Projeto Integrado:** Este repositório contém a interface web (front-end) da plataforma **Visão 90**.
+> Para a documentação completa do projeto, contextualização científica, dados de rastreamento e artigo do TCC, acesse o repositório unificado:
+> 🔗 **[Repositório Principal - Visão 90](https://github.com/Durigueto/visao90)**
+>
+> Back-end da API: 🔗 **[tcc-backend](https://github.com/Durigueto/tcc-backend)**
 
 ---
 
-## 1. Visão Geral da Interface
+## 1. Visão Geral
 
-O front-end foi construído para proporcionar uma experiência visual moderna, responsiva e de alta performance à beira do gramado ou na sala de análise técnica. 
+Interface gráfica desenvolvida em **Vue.js 3** e **Vuetify 3** para comissões técnicas de futebol. A aplicação apresenta visualização de desempenho físico e tático, renderizando mapas de calor espaciais em Canvas 2D acelerado por hardware e integrando o semáforo de risco epidemiológico ACWR de Gabbett com a Carga de Foster (Borg CR-10).
 
-### Principais Recursos Visuais:
-* **Renderização Gráfica em HTML5 Canvas 2D:** Renderização contínua do mapa de calor espacial a 60 quadros por segundo, processando as trajetórias de posicionamento do atleta com aceleração por hardware.
-* **Componentes Responsivos com Vuetify 3:** Adaptação ergonômica para desktops, tablets e smartphones com menus retráteis e tabelas com rolagem horizontal dedicada.
-* **Semáforo Coletivo ACWR:** Cards de triagem epidemiológica baseados no modelo de Tim Gabbett (2016), colorindo em verde, amarelo e vermelho o nível de estresse agudo dos jogadores.
-* **Gráficos Polares e Dinâmica Temporal:** Comparação visual entre o atleta e a média da sua posição tática (radar físico) e decomposição do ritmo em blocos de 15 minutos.
+## 2. Tecnologias Utilizadas
 
----
+* **Framework:** Vue.js 3 (Composition API)
+* **Componentes e Estilos:** Vuetify 3 e Material Design Icons (@mdi/font)
+* **Build e Bundler:** Vite
+* **Gráficos e Renderização:** HTML5 Canvas 2D (60 fps) e SVG vetorial
 
-## 2. Tecnologias Empregadas
-
-* **Framework Base:** [Vue.js 3](https://vuejs.org/) utilizando Composition API (`<script setup>`).
-* **Design System & UI:** [Vuetify 3](https://vuetifyjs.com/) e ícones [Material Design Icons (@mdi/font)](https://pictogrammers.com/docs/library/mdi/).
-* **Ferramenta de Build:** [Vite](https://vitejs.dev/) para compilação ultrarrápida e Hot Module Replacement (HMR).
-* **Autenticação e Armazenamento Local:** Módulo `authService.js` com segregação de dados por usuário via `localStorage`.
-
----
-
-## 3. Instruções de Instalação e Execução
+## 3. Como Executar Localmente
 
 ### Pré-requisitos
-* Node.js instalado (versão 18 ou superior).
+* Node.js (versão 18 ou superior).
 
-### Instalação de dependências:
 ```bash
+# 1. Instalar dependências
 npm install
-```
 
-### Inicialização do servidor de desenvolvimento:
-```bash
+# 2. Iniciar servidor Vite
 npm run dev
 ```
 
-A interface estará disponível no navegador no endereço:
-👉 `http://localhost:5173`
+A aplicação estará acessível em: `http://localhost:5173`
 
-### Compilação para produção:
+Para compilação de produção:
 ```bash
 npm run build
 ```
 
----
+## 4. Credenciais de Teste (Banca Examinadora)
 
-## 4. Guia de Teste Prático (Banca Examinadora)
-
-### Acesso ao Sistema:
-Ao carregar a página inicial, utilize a conta central de testes:
+Para visualizar as 3 partidas oficiais pré-carregadas e o elenco completo:
 * **E-mail:** `joaopedrodias895@gmail.com`
 * **Senha:** `123`
 
-### Importando Arquivos CSV da Metrica Sports:
+*(Também é possível registrar uma nova conta clicando em "Criar nova conta" na tela de login para validar o isolamento de dados).*
+
+## 5. Importação de Arquivos da Metrica Sports
+
 1. No menu lateral, acesse **"Inserir Partida"**.
-2. No formulário de envio, selecione o arquivo CSV de rastreamento. Você pode utilizar o arquivo de exemplo disponibilizado no projeto em:
-   `../tcc-backend/dados/dados_rastreamento_exemplo.csv`
-   ou qualquer arquivo oficial de rastreamento a 25 Hz baixado do repositório público da [Metrica Sports](https://github.com/metrica-sports/sample-data) (como `Sample_Game_1_RawTrackingData_Home_Team.csv`).
-3. Informe o título do confronto e clique no botão **"Processar e Importar CSV"**.
-4. O sistema processará as coordenadas, recalculará as zonas de velocidade metabólica e redirecionará a visualização para o painel da comissão técnica.
-
----
-
-## 5. Estrutura dos Arquivos
-
-```text
-tcc-frontend/
-├── index.html                 # Página base da aplicação
-├── vite.config.js             # Configurações de compilação do Vite e Vuetify
-├── package.json               # Dependências e scripts
-└── src/
-    ├── App.vue                # Componente principal contendo as 4 abas funcionais
-    ├── main.js                # Ponto de entrada Vue e registro de plugins
-    └── services/
-        └── authService.js     # Gerenciamento de sessão e isolamento multiusuário
-```
+2. Selecione o arquivo CSV de rastreamento oficial da Metrica Sports a 25 Hz (como `Sample_Game_1_RawTrackingData_Home_Team.csv` ou o arquivo de exemplo disponibilizado no back-end).
+3. Informe o nome do confronto e confirme o processamento. O sistema converterá as coordenadas para metros, calculará as 5 zonas de velocidade e direcionará a visualização para o painel da comissão técnica.
